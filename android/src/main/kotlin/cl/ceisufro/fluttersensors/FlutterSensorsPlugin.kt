@@ -13,13 +13,6 @@ import io.flutter.plugin.common.PluginRegistry.Registrar
 
 class FlutterSensorsPlugin : MethodCallHandler {
 
-    private val sensorMapping: HashMap<Int, Int> = hashMapOf(
-            0 to Sensor.TYPE_ACCELEROMETER,
-            1 to Sensor.TYPE_GYROSCOPE,
-            2 to Sensor.TYPE_MAGNETIC_FIELD,
-            3 to Sensor.TYPE_LIGHT
-    )
-
     private val listener: SensorEventListener = object : SensorEventListener {
         override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
             // NOT IMPLEMENTED
@@ -27,16 +20,11 @@ class FlutterSensorsPlugin : MethodCallHandler {
 
         override fun onSensorChanged(event: SensorEvent?) {
             if (event != null) {
-                var sensor:Int = 0
-                sensorMapping.forEach {
-                    if(it.value == event.sensor.type)
-                        sensor = it.key
-                }
                 val data = arrayListOf<Float>()
                 event.values.forEach {
                     data.add(it)
                 }
-                channel.invokeMethod("sensor_updated", mapOf("sensor" to sensor, "data" to data, "accuracy" to event.accuracy))
+                channel.invokeMethod("sensor_updated", mapOf("sensor" to event.sensor.type, "data" to data, "accuracy" to event.accuracy))
             }
         }
     }
@@ -57,19 +45,19 @@ class FlutterSensorsPlugin : MethodCallHandler {
         when {
             call.method == "is_sensor_available" -> {
                 val dataMap = call.arguments as Map<*, *>
-                var sensorType: Int? = dataMap["sensor"] as Int
-                sensorType = sensorMapping[sensorType]
-                val isAvailable = if (sensorType != null) isSensorAvailable(sensorType) else false
+                val sensorType: Int= dataMap["sensor"] as Int
+                val isAvailable = isSensorAvailable(sensorType)
                 result.success(isAvailable)
                 return
             }
             call.method == "register_sensor_listener" -> {
                 try {
                     val dataMap = call.arguments as Map<*, *>
-                    var sensorType: Int? = dataMap["sensor"] as Int
-                    sensorType = sensorMapping[sensorType]
-                    val sensor = sensorManager.getDefaultSensor(sensorType!!)
-                    val register = sensorManager.registerListener(listener, sensor, SensorManager.SENSOR_DELAY_NORMAL)
+                    val sensorType: Int = dataMap["sensor"] as Int
+                    val rate: Int? = dataMap["rate"] as Int
+                    val sampling = if (rate == null) SensorManager.SENSOR_DELAY_NORMAL else rate
+                    val sensor = sensorManager.getDefaultSensor(sensorType)
+                    val register = sensorManager.registerListener(listener, sensor, sampling)
                     result.success(register)
                 } catch (e: Exception) {
                     e.printStackTrace()
@@ -80,9 +68,8 @@ class FlutterSensorsPlugin : MethodCallHandler {
             call.method == "unregister_sensor_listener" -> {
                 try {
                     val dataMap = call.arguments as Map<*, *>
-                    var sensorType: Int? = dataMap["sensor"] as Int
-                    sensorType = sensorMapping[sensorType]
-                    val sensor = sensorManager.getDefaultSensor(sensorType!!)
+                    var sensorType: Int = dataMap["sensor"] as Int
+                    val sensor = sensorManager.getDefaultSensor(sensorType)
                     sensorManager.unregisterListener(listener, sensor)
                     result.success(true)
                 } catch (e: Exception) {

@@ -11,46 +11,37 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  bool _accelerometerStatus = false;
-  bool _gyroscopeStatus = false;
-  bool _magineticFieldSensorStatus = false;
-  bool _linearAccelerationSensorStatus = false;
-  bool _lightSensorStatus = false;
-  List<double> _accelerometerData = [0.0, 0.0, 0.0];
-  List<double> _gyroscopeData = [0.0, 0.0, 0.0];
-  var _magineticFieldSensorData;
-  var _linearAccelerationSensorData;
-  var _lightSensorData;
+  bool _sensorStatus = false;
+  List<double> _sensorData = List(3);
   FlutterSensors _flutterSensors = FlutterSensors();
 
   @override
   void initState() {
     super.initState();
-    initAccelerometer();
+    initSensor();
   }
 
-  Future<void> initAccelerometer() async {
+  Future<void> initSensor() async {
     bool accelerometerEnabled =
         await FlutterSensors.isSensorAvailable(Sensor.ACCELEROMETER);
-    bool gyroscopeEnabled =
-        await FlutterSensors.isSensorAvailable(Sensor.GYROSCOPE);
-    var sensorCallback = (sensor, data, accuracy) {
-      if (sensor == Sensor.ACCELEROMETER) {
-        setState(() {
-          _accelerometerData = data;
-        });
-      } else if (sensor == Sensor.GYROSCOPE) {
-        setState(() {
-          _gyroscopeData = data;
-        });
-      }
-    };
-    _flutterSensors.registerSensorListener(
-        Sensor.ACCELEROMETER, sensorCallback);
-    _flutterSensors.registerSensorListener(Sensor.GYROSCOPE, sensorCallback);
+    if (accelerometerEnabled) {
+      var sensorCallback = (sensor, data, accuracy) {
+        if (sensor == Sensor.LINEAR_ACCELERATION) {
+          setState(() {
+            _sensorData = data;
+          });
+        }
+      };
+      _flutterSensors.registerSensorListener(
+        Sensor.LINEAR_ACCELERATION,
+        sensorCallback,
+        refreshRate: Duration(
+          milliseconds: 250,
+        ),
+      );
+    }
     setState(() {
-      _accelerometerStatus = accelerometerEnabled;
-      _gyroscopeStatus = gyroscopeEnabled;
+      _sensorStatus = accelerometerEnabled;
     });
   }
 
@@ -58,35 +49,36 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-          appBar: AppBar(
-            title: const Text('Flutter Sensors Example'),
-          ),
-          body: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: <Widget>[
-              Text(
-                _accelerometerStatus
-                    ? """
-                Accelerometer: $_accelerometerStatus\n
-                X=${_accelerometerData[0]}\n
-                Y=${_accelerometerData[1]}\n
-                Z=${_accelerometerData[2]}"""
-                    : "Accelerometer: $_accelerometerStatus",
-                textAlign: TextAlign.center,
-              ),
-              Text(
-                _gyroscopeStatus
-                    ? """
-                Gyroscope: $_gyroscopeStatus
-                X=${_gyroscopeData[0]}\n
-                Y=${_gyroscopeData[1]}\n
-                Z=${_gyroscopeData[2]}"""
-                    : "Gyroscope: $_gyroscopeStatus",
-                textAlign: TextAlign.center,
-              ),
-            ],
-          )),
+        appBar: AppBar(
+          title: const Text('Flutter Sensors Example'),
+        ),
+        body: Container(
+            padding: EdgeInsets.all(16.0),
+            alignment: AlignmentDirectional.topCenter,
+            child: Column(
+              children: <Widget>[
+                Text(
+                  "Sensor Enabled: $_sensorStatus",
+                  textAlign: TextAlign.center,
+                ),
+                Padding(padding: EdgeInsets.only(top: 16.0)),
+                Text(
+                  "[0](X) = ${_sensorData[0]}",
+                  textAlign: TextAlign.center,
+                ),
+                Padding(padding: EdgeInsets.only(top: 16.0)),
+                Text(
+                  "[1](Y) = ${_sensorData[1]}",
+                  textAlign: TextAlign.center,
+                ),
+                Padding(padding: EdgeInsets.only(top: 16.0)),
+                Text(
+                  "[2](Z) = ${_sensorData[2]}",
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            )),
+      ),
     );
   }
 }

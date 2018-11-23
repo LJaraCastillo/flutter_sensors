@@ -1,44 +1,62 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/services.dart';
 
-enum Sensor { ACCELEROMETER, GYROSCOPE, MAGNETIC_FIELD, LIGHT }
+class Sensor {
+  static const int ACCELEROMETER = 1;
+  static const int GYROSCOPE = 4;
+  static const int MAGNETIC_FIELD = 2;
+  static const int LINEAR_ACCELERATION = 10;
+  static const int STEP_COUNTER = 19;
+}
 
-typedef SensorCallback(Sensor sensor, List<double> data, int accuracy);
+typedef SensorCallback(int sensor, List<double> data, int accuracy);
 
 class FlutterSensors {
   static const MethodChannel _channel = const MethodChannel('flutter_sensors');
-  Map<Sensor, SensorCallback> _sensorCallbackMap = Map();
+  Map<int, SensorCallback> _sensorCallbackMap = Map();
 
   FlutterSensors() {
     _channel.setMethodCallHandler(_handleMethod);
   }
 
-  void registerSensorListener(
-      Sensor sensor, SensorCallback sensorCallback) async {
+  void registerSensorListener(int sensor, SensorCallback sensorCallback,
+      {Duration refreshRate}) async {
     if (await isSensorAvailable(sensor)) {
+      Map data = {
+        "sensor": sensor,
+      };
+      data.putIfAbsent(
+        "rate",
+        () => refreshRate != null
+            ? Platform.isAndroid
+                ? refreshRate.inMicroseconds
+                : 1000 / refreshRate.inMilliseconds
+            : null,
+      );
       final bool registed = await _channel.invokeMethod(
         "register_sensor_listener",
-        {"sensor": sensor.index},
+        data,
       );
       if (registed) _sensorCallbackMap[sensor] = sensorCallback;
     }
   }
 
-  void unregisterSensorListener(Sensor sensor) async {
+  void unregisterSensorListener(int sensor) async {
     if (_sensorCallbackMap.containsKey(sensor)) {
       final bool unregisted = await _channel.invokeMethod(
         "unregister_sensor_listener",
-        {"sensor": sensor.index},
+        {"sensor": sensor},
       );
       if (unregisted) _sensorCallbackMap.remove(sensor);
     }
   }
 
-  static Future<bool> isSensorAvailable(Sensor sensor) async {
+  static Future<bool> isSensorAvailable(int sensor) async {
     final bool isAvailable = await _channel.invokeMethod(
       'is_sensor_available',
-      {"sensor": sensor.index},
+      {"sensor": sensor},
     );
     return isAvailable;
   }
@@ -48,7 +66,7 @@ class FlutterSensors {
       case "sensor_updated":
         {
           Map resultMap = call.arguments;
-          Sensor sensor = Sensor.values[resultMap["sensor"]];
+          int sensor = resultMap["sensor"];
           int accuracy = resultMap["accuracy"];
           SensorCallback sensorCallback = _sensorCallbackMap[sensor];
           List<double> data = [];
