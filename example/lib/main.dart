@@ -12,37 +12,13 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   bool _sensorStatus = false;
-  List<double> _sensorData = List(3);
-  FlutterSensors _flutterSensors = FlutterSensors();
+  List<double> _sensorData = List.filled(3, 0.0);
+  SensorManager _flutterSensors = SensorManager();
 
   @override
-  void initState() {
-    super.initState();
-    initSensor();
-  }
-
-  Future<void> initSensor() async {
-    bool accelerometerEnabled =
-        await FlutterSensors.isSensorAvailable(Sensor.ACCELEROMETER);
-    if (accelerometerEnabled) {
-      var sensorCallback = (sensor, data, accuracy) {
-        if (sensor == Sensor.LINEAR_ACCELERATION) {
-          setState(() {
-            _sensorData = data;
-          });
-        }
-      };
-      _flutterSensors.registerSensorListener(
-        Sensor.LINEAR_ACCELERATION,
-        sensorCallback,
-        refreshRate: Duration(
-          milliseconds: 250,
-        ),
-      );
-    }
-    setState(() {
-      _sensorStatus = accelerometerEnabled;
-    });
+  void dispose() {
+    _flutterSensors.dispose();
+    super.dispose();
   }
 
   @override
@@ -76,9 +52,56 @@ class _MyAppState extends State<MyApp> {
                   "[2](Z) = ${_sensorData[2]}",
                   textAlign: TextAlign.center,
                 ),
+                Padding(padding: EdgeInsets.only(top: 16.0)),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    MaterialButton(
+                      child: Text("Start"),
+                      color: Colors.green,
+                      onPressed: () {
+                        initSensor();
+                      },
+                    ),
+                    Padding(
+                      padding: EdgeInsets.all(8.0),
+                    ),
+                    MaterialButton(
+                      child: Text("Stop"),
+                      color: Colors.red,
+                      onPressed: () {
+                        _flutterSensors.unregisterAllListeners();
+                      },
+                    ),
+                  ],
+                ),
               ],
             )),
       ),
     );
+  }
+
+  Future<void> initSensor() async {
+    bool accelerometerEnabled =
+        await SensorManager.isSensorAvailable(Sensors.ACCELEROMETER);
+    if (accelerometerEnabled) {
+      var sensorCallback = (sensor, data, accuracy) {
+        if (sensor == Sensors.ACCELEROMETER) {
+          setState(() {
+            _sensorData = data;
+          });
+        }
+      };
+      _flutterSensors.registerSensorListener(
+        Sensors.ACCELEROMETER,
+        sensorCallback,
+        refreshRate: Duration(
+          milliseconds: 250,
+        ),
+      );
+    }
+    setState(() {
+      _sensorStatus = accelerometerEnabled;
+    });
   }
 }

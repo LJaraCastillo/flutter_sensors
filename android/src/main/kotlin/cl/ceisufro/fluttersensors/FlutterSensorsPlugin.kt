@@ -5,13 +5,32 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.util.Log
+import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
-import io.flutter.plugin.common.MethodChannel.MethodCallHandler
-import io.flutter.plugin.common.MethodChannel.Result
-import io.flutter.plugin.common.PluginRegistry.Registrar
+import io.flutter.plugin.common.PluginRegistry
 
-class FlutterSensorsPlugin : MethodCallHandler {
+class FlutterSensorsPlugin : MethodChannel.MethodCallHandler, EventChannel.StreamHandler {
+    companion object {
+        lateinit var sensorManager: SensorManager
+
+        @JvmStatic
+        fun registerWith(registrar: PluginRegistry.Registrar) {
+            val plugin = FlutterSensorsPlugin()
+            val methodChannel = MethodChannel(registrar.messenger(), "flutter_sensors")
+            methodChannel.setMethodCallHandler(plugin)
+            val eventChannel = EventChannel(registrar.messenger(), "flutter_sensors_update_channel")
+            eventChannel.setStreamHandler(plugin)
+            registrar.addViewDestroyListener {
+                // If the view is destroyed we are going to remove all the listeners.
+                plugin.unregisterAllListeners()
+            }
+            sensorManager = registrar.context().getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        }
+    }
+
+    private var sinks = mutableListOf<EventChannel.EventSink?>()
 
     private val listener: SensorEventListener = object : SensorEventListener {
         override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
@@ -24,28 +43,20 @@ class FlutterSensorsPlugin : MethodCallHandler {
                 event.values.forEach {
                     data.add(it)
                 }
-                channel.invokeMethod("sensor_updated", mapOf("sensor" to event.sensor.type, "data" to data, "accuracy" to event.accuracy))
+                val resultMap = mutableMapOf<String, Any>(
+                        "sensor" to event.sensor.type,
+                        "data" to data,
+                        "accuracy" to event.accuracy)
+                notify(resultMap)
             }
         }
     }
 
-    companion object {
-        lateinit var channel: MethodChannel
-        lateinit var sensorManager: SensorManager
-
-        @JvmStatic
-        fun registerWith(registrar: Registrar) {
-            channel = MethodChannel(registrar.messenger(), "flutter_sensors")
-            channel.setMethodCallHandler(FlutterSensorsPlugin())
-            sensorManager = registrar.context().getSystemService(Context.SENSOR_SERVICE) as SensorManager
-        }
-    }
-
-    override fun onMethodCall(call: MethodCall, result: Result) {
+    override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         when {
             call.method == "is_sensor_available" -> {
                 val dataMap = call.arguments as Map<*, *>
-                val sensorType: Int= dataMap["sensor"] as Int
+                val sensorType: Int = dataMap["sensor"] as Int
                 val isAvailable = isSensorAvailable(sensorType)
                 result.success(isAvailable)
                 return
@@ -68,7 +79,7 @@ class FlutterSensorsPlugin : MethodCallHandler {
             call.method == "unregister_sensor_listener" -> {
                 try {
                     val dataMap = call.arguments as Map<*, *>
-                    var sensorType: Int = dataMap["sensor"] as Int
+                    val sensorType: Int = dataMap["sensor"] as Int
                     val sensor = sensorManager.getDefaultSensor(sensorType)
                     sensorManager.unregisterListener(listener, sensor)
                     result.success(true)
@@ -78,11 +89,44 @@ class FlutterSensorsPlugin : MethodCallHandler {
                 }
                 return
             }
+            call.method == "unregister_all_listeners" -> {
+                val unregister = unregisterAllListeners()
+                result.success(unregister)
+                return
+            }
             else -> result.notImplemented()
+        }
+    }
+
+    override fun onListen(args: Any?, sink: EventChannel.EventSink?) {
+        sinks.add(sink)
+    }
+
+    override fun onCancel(p0: Any?) {
+        unregisterAllListeners()
+        sinks.forEach {
+            it?.endOfStream()
+        }
+        sinks.clear()
+    }
+
+    private fun notify(resultMap: MutableMap<String, Any>) {
+        sinks.forEach {
+            it?.success(resultMap)
         }
     }
 
     private fun isSensorAvailable(sensor: Int): Boolean {
         return sensorManager.getSensorList(sensor).isNotEmpty()
+    }
+
+    private fun unregisterAllListeners(): Boolean {
+        return try {
+            sensorManager.unregisterListener(listener)
+            true
+        } catch (ex: Exception) {
+            ex.printStackTrace()
+            false
+        }
     }
 }

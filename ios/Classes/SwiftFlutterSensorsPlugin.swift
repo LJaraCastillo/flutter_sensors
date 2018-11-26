@@ -20,7 +20,7 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin, FlutterStreamHa
         let channel = FlutterMethodChannel(name: "flutter_sensors", binaryMessenger: registrar.messenger())
         let instance = SwiftFlutterSensorsPlugin()
         registrar.addMethodCallDelegate(instance, channel: channel)
-        let eventChannel = FlutterEventChannel(name:"flutter_sensor_update_channel", binaryMessenger: registrar.messenger())
+        let eventChannel = FlutterEventChannel(name:"flutter_sensors_update_channel", binaryMessenger: registrar.messenger())
         eventChannel.setStreamHandler(instance)
     }
     
