@@ -14,11 +14,28 @@ class Sensor {
 typedef SensorCallback(int sensor, List<double> data, int accuracy);
 
 class FlutterSensors {
-  static const MethodChannel _channel = const MethodChannel('flutter_sensors');
+  static const MethodChannel _methodChannel = const MethodChannel('flutter_sensors');
+  static const EventChannel _eventChannel = const EventChannel('flutter_sensor_update_channel');
   Map<int, SensorCallback> _sensorCallbackMap = Map();
+  Stream<dynamic> _updateStream;
 
   FlutterSensors() {
-    _channel.setMethodCallHandler(_handleMethod);
+    initUpdateStream();
+  }
+
+  void initUpdateStream(){
+    _updateStream = _eventChannel.receiveBroadcastStream();
+    _updateStream.listen((resultMap){
+      int sensor = resultMap["sensor"];
+      int accuracy = resultMap["accuracy"];
+      SensorCallback sensorCallback = _sensorCallbackMap[sensor];
+      List<double> data = [];
+      List<dynamic> resultData = resultMap["data"];
+      resultData.forEach((value) {
+        data.add(value);
+      });
+      sensorCallback(sensor, data, accuracy);
+    });
   }
 
   void registerSensorListener(int sensor, SensorCallback sensorCallback,
@@ -32,10 +49,10 @@ class FlutterSensors {
         () => refreshRate != null
             ? Platform.isAndroid
                 ? refreshRate.inMicroseconds
-                : 1000 / refreshRate.inMilliseconds
+                : refreshRate.inSeconds
             : null,
       );
-      final bool registed = await _channel.invokeMethod(
+      final bool registed = await _methodChannel.invokeMethod(
         "register_sensor_listener",
         data,
       );
@@ -45,7 +62,7 @@ class FlutterSensors {
 
   void unregisterSensorListener(int sensor) async {
     if (_sensorCallbackMap.containsKey(sensor)) {
-      final bool unregisted = await _channel.invokeMethod(
+      final bool unregisted = await _methodChannel.invokeMethod(
         "unregister_sensor_listener",
         {"sensor": sensor},
       );
@@ -54,30 +71,10 @@ class FlutterSensors {
   }
 
   static Future<bool> isSensorAvailable(int sensor) async {
-    final bool isAvailable = await _channel.invokeMethod(
+    final bool isAvailable = await _methodChannel.invokeMethod(
       'is_sensor_available',
       {"sensor": sensor},
     );
     return isAvailable;
-  }
-
-  Future<String> _handleMethod(MethodCall call) async {
-    switch (call.method) {
-      case "sensor_updated":
-        {
-          Map resultMap = call.arguments;
-          int sensor = resultMap["sensor"];
-          int accuracy = resultMap["accuracy"];
-          SensorCallback sensorCallback = _sensorCallbackMap[sensor];
-          List<double> data = [];
-          List<dynamic> resultData = resultMap["data"];
-          resultData.forEach((value) {
-            data.add(value);
-          });
-          sensorCallback(sensor, data, accuracy);
-          return Future.value("");
-        }
-    }
-    return Future.value("");
   }
 }

@@ -2,4 +2,6 @@
 
 ## 0.0.1
 
-* initial release
+* Function to register a listener to sensor changes.
+* Function to unregister a previously registered listener.
+* Added callback that inform changes in a sensor with the accuracy of the reading.
