@@ -13,11 +13,11 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   bool _sensorStatus = false;
   List<double> _sensorData = List.filled(3, 0.0);
-  SensorManager _flutterSensors = SensorManager();
+  SensorManager _sensorManager = SensorManager();
 
   @override
   void dispose() {
-    _flutterSensors.dispose();
+    _sensorManager.dispose();
     super.dispose();
   }
 
@@ -74,7 +74,7 @@ class _MyAppState extends State<MyApp> {
                       child: Text("Stop"),
                       color: Colors.red,
                       onPressed: () {
-                        _flutterSensors.unregisterAllListeners();
+                        _sensorManager.unregisterAllListeners();
                       },
                     ),
                   ],
@@ -96,7 +96,7 @@ class _MyAppState extends State<MyApp> {
           });
         }
       };
-      _flutterSensors.registerSensorListener(
+      _sensorManager.registerSensorListener(
         Sensors.ACCELEROMETER,
         sensorCallback,
         refreshRate: Duration(

@@ -54,21 +54,21 @@ class SensorManager {
                 : refreshRate.inSeconds
             : null,
       );
-      final bool registed = await _methodChannel.invokeMethod(
+      final bool registered = await _methodChannel.invokeMethod(
         "register_sensor_listener",
         data,
       );
-      if (registed) _sensorCallbackMap[sensor] = sensorCallback;
+      if (registered) _sensorCallbackMap[sensor] = sensorCallback;
     }
   }
 
   void unregisterSensorListener(int sensor) async {
     if (_sensorCallbackMap.containsKey(sensor)) {
-      final bool unregisted = await _methodChannel.invokeMethod(
+      final bool unregistered = await _methodChannel.invokeMethod(
         "unregister_sensor_listener",
         {"sensor": sensor},
       );
-      if (unregisted) _sensorCallbackMap.remove(sensor);
+      if (unregistered) _sensorCallbackMap.remove(sensor);
     }
   }
 

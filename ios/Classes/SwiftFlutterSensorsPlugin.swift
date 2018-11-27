@@ -17,11 +17,16 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin, FlutterStreamHa
     private var isAccelerometerActive = false
     
     public static func register(with registrar: FlutterPluginRegistrar) {
-        let channel = FlutterMethodChannel(name: "flutter_sensors", binaryMessenger: registrar.messenger())
         let instance = SwiftFlutterSensorsPlugin()
+        let channel = FlutterMethodChannel(name: "flutter_sensors", binaryMessenger: registrar.messenger())
         registrar.addMethodCallDelegate(instance, channel: channel)
         let eventChannel = FlutterEventChannel(name:"flutter_sensors_update_channel", binaryMessenger: registrar.messenger())
         eventChannel.setStreamHandler(instance)
+        registrar.addApplicationDelegate(instance)
+    }
+    
+    public func applicationWillTerminate(_ application: UIApplication) {
+        unregisterAllListeners()
     }
     
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -48,6 +53,10 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin, FlutterStreamHa
             let unregistered = unregisterSensorListener(sensorType: sensorType)
             result(unregistered)
             break
+        case "unregister_all_listeners":
+            unregisterAllListeners()
+            result(true)
+            break
         default:
             result("iOS " + UIDevice.current.systemVersion)
         }
@@ -59,11 +68,12 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin, FlutterStreamHa
     }
     
     public func onCancel(withArguments arguments: Any?) -> FlutterError? {
+        unregisterAllListeners()
         sinks.removeAll()
         return nil
     }
     
-    func notify(sensorType:Int, sensorData:[Double]){
+    private func notify(sensorType:Int, sensorData:[Double]){
         let data = [
             "sensor": sensorType,
             "data": sensorData,
@@ -74,7 +84,7 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin, FlutterStreamHa
         }
     }
     
-    public func isSensorAvailable(sensorType:Int)->Bool{
+    private func isSensorAvailable(sensorType:Int)->Bool{
         var isAvailable = false
         switch sensorType {
         case ACCELEROMETER_ID:
@@ -99,7 +109,7 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin, FlutterStreamHa
         return isAvailable
     }
     
-    public func registerSensorListener(sensorType:Int, updateInterval:Int)->Bool{
+    private func registerSensorListener(sensorType:Int, updateInterval:Int)->Bool{
         var registered = false
         if(self.isSensorAvailable(sensorType: sensorType)){
             switch sensorType {
@@ -159,13 +169,14 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin, FlutterStreamHa
         return registered
     }
     
-    public func unregisterSensorListener(sensorType:Int)->Bool{
+    private func unregisterSensorListener(sensorType:Int)->Bool{
         var unregistered = false
         switch sensorType {
         case ACCELEROMETER_ID:
             self.notifyAcceleration = false
             if(!self.notifyLinearAcceleration){
                 motionManager.stopAccelerometerUpdates()
+                self.isAccelerometerActive = false
             }
             unregistered = true
             break
@@ -181,6 +192,7 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin, FlutterStreamHa
             self.notifyLinearAcceleration = false
             if(!self.notifyAcceleration){
                 motionManager.stopAccelerometerUpdates()
+                self.isAccelerometerActive = false
             }
             unregistered = true
             break
@@ -195,7 +207,7 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin, FlutterStreamHa
         return unregistered
     }
     
-    private func startAccelerometerUpdates(updateInverval:Int)->Void{
+    private func startAccelerometerUpdates(updateInverval:Int){
         if(!self.isAccelerometerActive){
             motionManager.accelerometerUpdateInterval = TimeInterval(updateInverval)
             motionManager.startAccelerometerUpdates(to: OperationQueue.current!, withHandler:{data, error in
@@ -221,5 +233,19 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin, FlutterStreamHa
             })
             self.isAccelerometerActive = true
         }
+    }
+    
+    private func stopAccelerometer(){
+        motionManager.stopAccelerometerUpdates()
+        self.isAccelerometerActive = false
+        self.notifyAcceleration = false
+        self.notifyLinearAcceleration = false
+    }
+    
+    private func unregisterAllListeners(){
+        stopAccelerometer()
+        motionManager.stopGyroUpdates()
+        motionManager.stopMagnetometerUpdates()
+        pedometer.stopUpdates()
     }
 }
