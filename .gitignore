@@ -9,7 +9,6 @@
 .buildlog/
 .history
 .svn/
-.packages
 
 # IntelliJ related
 *.iml
@@ -19,3 +18,4 @@
 
 # Visual Studio Code related
 .vscode/
+.packages
