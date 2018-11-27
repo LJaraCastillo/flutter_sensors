@@ -34,6 +34,10 @@ class _MyAppState extends State<MyApp> {
             child: Column(
               children: <Widget>[
                 Text(
+                  "Accelerometer Test",
+                  textAlign: TextAlign.center,
+                ),
+                Text(
                   "Sensor Enabled: $_sensorStatus",
                   textAlign: TextAlign.center,
                 ),
