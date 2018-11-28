@@ -65,7 +65,7 @@ class FlutterSensorsPlugin : MethodChannel.MethodCallHandler, EventChannel.Strea
                 try {
                     val dataMap = call.arguments as Map<*, *>
                     val sensorType: Int = dataMap["sensor"] as Int
-                    val rate: Int? = dataMap["rate"] as Int
+                    val rate: Int? = dataMap["rate"] as Int?
                     val sampling = if (rate == null) SensorManager.SENSOR_DELAY_NORMAL else rate
                     val sensor = sensorManager.getDefaultSensor(sensorType)
                     val register = sensorManager.registerListener(listener, sensor, sampling)

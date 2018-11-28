@@ -99,9 +99,6 @@ class _MyAppState extends State<MyApp> {
       _sensorManager.registerSensorListener(
         Sensors.ACCELEROMETER,
         sensorCallback,
-        refreshRate: Duration(
-          milliseconds: 250,
-        ),
       );
     }
     setState(() {

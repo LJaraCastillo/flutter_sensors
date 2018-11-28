@@ -46,13 +46,13 @@ class SensorManager {
       Map data = {
         "sensor": sensor,
       };
+      refreshRate =
+          refreshRate != null ? refreshRate : Sensors.SENSOR_DELAY_NORMAL;
       data.putIfAbsent(
         "rate",
-        () => refreshRate != null
-            ? Platform.isAndroid
-                ? refreshRate.inMicroseconds
-                : refreshRate.inSeconds
-            : null,
+        () => Platform.isAndroid
+            ? refreshRate.inMicroseconds // Delay in Android is controled in microseconds
+            : refreshRate.inSeconds, // Delay in iOS is controled in seconds
       );
       final bool registered = await _methodChannel.invokeMethod(
         "register_sensor_listener",
