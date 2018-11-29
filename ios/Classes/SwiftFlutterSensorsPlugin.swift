@@ -7,7 +7,7 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin, FlutterStreamHa
     private let GYROSCOPE_ID:Int = 4
     private let MAGNETIC_FIELD_ID:Int = 1
     private let LINEAR_ACCELERATION_ID:Int = 10
-    private let PEDOMETER_ID:Int = 19
+    private let STEP_DETECTOR_ID:Int = 18
     private let motionManager=CMMotionManager()
     private let deviceMotion=CMDeviceMotion()
     private let pedometer=CMPedometer()
@@ -89,7 +89,7 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin, FlutterStreamHa
         case LINEAR_ACCELERATION_ID:
             isAvailable = motionManager.isAccelerometerAvailable
             break
-        case PEDOMETER_ID:
+        case STEP_DETECTOR_ID:
             isAvailable = CMPedometer.isStepCountingAvailable()
             break
         default:
@@ -141,13 +141,13 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin, FlutterStreamHa
                 self.startAccelerometerUpdates(updateInverval: updateInterval)
                 registered = true
                 break
-            case PEDOMETER_ID:
+            case STEP_DETECTOR_ID:
                 // The updates of this one depends of the user and does not need an inverval.
                 pedometer.startUpdates(from: Date(), withHandler: {data, error in
                     guard error == nil else { return }
                     guard let pedometerData = data else { return }
-                    let steps = [Double(truncating: pedometerData.numberOfSteps)]
-                    self.notify(sensorType: self.PEDOMETER_ID, sensorData: steps)
+                    let steps = [1.0]
+                    self.notify(sensorType: self.STEP_DETECTOR_ID, sensorData: steps)
                 })
                 registered = true
                 break
@@ -186,7 +186,7 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin, FlutterStreamHa
             }
             unregistered = true
             break
-        case PEDOMETER_ID:
+        case STEP_DETECTOR_ID:
             pedometer.stopUpdates()
             unregistered = true
             break

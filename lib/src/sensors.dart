@@ -6,7 +6,7 @@ class Sensors {
   static const int GYROSCOPE = 4;
   static const int MAGNETIC_FIELD = 2;
   static const int LINEAR_ACCELERATION = 10;
-  static const int STEP_COUNTER = 19;
+  static const int STEP_DETECTOR = 18;
 
   // Sensor delay
   static const Duration SENSOR_DELAY_NORMAL = Duration(microseconds: 200000);
