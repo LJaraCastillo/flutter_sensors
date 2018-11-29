@@ -15,6 +15,9 @@ class SensorManager {
   static Stream<SensorEvent> sensorUpdates(SensorRequest request) =>
       _sensorChannel.sensorUpdates(request);
 
+  static Stream<SensorEvent> sensorsUpdates(List<SensorRequest> request) =>
+      _sensorChannel.sensorsUpdates(request);
+
   static Future<bool> isSensorAvailable(int sensor) =>
       _SensorChannel.isSensorAvailable(sensor);
 }

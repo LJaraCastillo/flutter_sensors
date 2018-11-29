@@ -49,6 +49,45 @@ class _SensorChannel {
     return controller.stream;
   }
 
+  Stream<SensorEvent> sensorsUpdates(List<SensorRequest> requests) {
+    StreamController<SensorEvent> controller;
+    _SensorUpdateSubscription sensorUpdateSubscription;
+    // If the delay is null we set it as normal.
+    requests.forEach((request) => request.refreshDelay =
+        request.refreshDelay != null
+            ? request.refreshDelay
+            : Sensors.SENSOR_DELAY_NORMAL);
+    final StreamSubscription<SensorEvent> updatesSubscription =
+        _updatesStream.listen((SensorEvent result) {
+      bool valid = requests
+          .where((request) => request.sensor == result.sensor)
+          .isNotEmpty;
+      if (valid) {
+        controller.add(result);
+      }
+    });
+    updatesSubscription.onDone(() {
+      _updatesSubscriptions.remove(sensorUpdateSubscription);
+    });
+    sensorUpdateSubscription = _SensorUpdateSubscription(
+      updatesSubscription,
+    );
+    _updatesSubscriptions.add(sensorUpdateSubscription);
+    controller = new StreamController<SensorEvent>.broadcast(
+      onListen: () {
+        requests.forEach((request) => _methodChannel.invokeMethod(
+            "register_sensor_listener", request.toMap()));
+      },
+      onCancel: () {
+        sensorUpdateSubscription.subscription.cancel();
+        _updatesSubscriptions.remove(sensorUpdateSubscription);
+        requests.forEach((request) => _methodChannel.invokeMethod(
+            "unregister_sensor_listener", {"sensor": request.sensor}));
+      },
+    );
+    return controller.stream;
+  }
+
   static Future<bool> isSensorAvailable(int sensor) async {
     final bool isAvailable = await _methodChannel.invokeMethod(
       'is_sensor_available',

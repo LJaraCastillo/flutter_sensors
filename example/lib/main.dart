@@ -11,25 +11,37 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  bool _accelStatus = false;
-  bool _gyroStatus = false;
+  bool _accelAvailable = false;
+  bool _gyroAvailable = false;
   List<double> _accelData = List.filled(3, 0.0);
   List<double> _gyroData = List.filled(3, 0.0);
   StreamSubscription _accelSubscription;
   StreamSubscription _gyroSubscription;
+  @override
+  void initState() {
+    _checkAccelerometerStatus();
+    _checkGyroscopeStatus();
+    super.initState();
+  }
 
   @override
   void dispose() {
-    stopAccelerometer();
-    stopGyroscope();
+    _stopAccelerometer();
+    _stopGyroscope();
     super.dispose();
   }
 
-  Future<void> startAccelerometer() async {
+  void _checkAccelerometerStatus() async {
+    await SensorManager.isSensorAvailable(Sensors.ACCELEROMETER).then((result) {
+      setState(() {
+        _accelAvailable = result;
+      });
+    });
+  }
+
+  Future<void> _startAccelerometer() async {
     if (_accelSubscription != null) return;
-    bool accelerometerEnabled =
-        await SensorManager.isSensorAvailable(Sensors.ACCELEROMETER);
-    if (accelerometerEnabled) {
+    if (_accelAvailable) {
       _accelSubscription = SensorManager.sensorUpdates(SensorRequest(
         Sensors.ACCELEROMETER,
         refreshDelay: Sensors.SENSOR_DELAY_GAME,
@@ -39,21 +51,25 @@ class _MyAppState extends State<MyApp> {
         });
       });
     }
-    setState(() {
-      _accelStatus = accelerometerEnabled;
-    });
   }
 
-  void stopAccelerometer() {
+  void _stopAccelerometer() {
     if (_accelSubscription == null) return;
     _accelSubscription.cancel();
     _accelSubscription = null;
   }
 
-  Future<void> startGyroscope() async {
+  void _checkGyroscopeStatus() async {
+    await SensorManager.isSensorAvailable(Sensors.GYROSCOPE).then((result) {
+      setState(() {
+        _gyroAvailable = result;
+      });
+    });
+  }
+
+  Future<void> _startGyroscope() async {
     if (_gyroSubscription != null) return;
-    bool gyroEnabled = await SensorManager.isSensorAvailable(Sensors.GYROSCOPE);
-    if (gyroEnabled) {
+    if (_gyroAvailable) {
       _gyroSubscription =
           SensorManager.sensorUpdates(SensorRequest(Sensors.GYROSCOPE))
               .listen((sensorEvent) {
@@ -62,12 +78,9 @@ class _MyAppState extends State<MyApp> {
         });
       });
     }
-    setState(() {
-      _gyroStatus = gyroEnabled;
-    });
   }
 
-  void stopGyroscope() {
+  void _stopGyroscope() {
     if (_gyroSubscription == null) return;
     _gyroSubscription.cancel();
     _gyroSubscription = null;
@@ -90,7 +103,7 @@ class _MyAppState extends State<MyApp> {
                 textAlign: TextAlign.center,
               ),
               Text(
-                "Accelerometer Enabled: $_accelStatus",
+                "Accelerometer Enabled: $_accelAvailable",
                 textAlign: TextAlign.center,
               ),
               Padding(padding: EdgeInsets.only(top: 16.0)),
@@ -115,9 +128,9 @@ class _MyAppState extends State<MyApp> {
                   MaterialButton(
                     child: Text("Start"),
                     color: Colors.green,
-                    onPressed: () {
-                      startAccelerometer();
-                    },
+                    onPressed: _accelAvailable != null
+                        ? () => _startAccelerometer()
+                        : null,
                   ),
                   Padding(
                     padding: EdgeInsets.all(8.0),
@@ -125,9 +138,9 @@ class _MyAppState extends State<MyApp> {
                   MaterialButton(
                     child: Text("Stop"),
                     color: Colors.red,
-                    onPressed: () {
-                      stopAccelerometer();
-                    },
+                    onPressed: _accelAvailable != null
+                        ? () => _stopAccelerometer()
+                        : null,
                   ),
                 ],
               ),
@@ -137,7 +150,7 @@ class _MyAppState extends State<MyApp> {
                 textAlign: TextAlign.center,
               ),
               Text(
-                "Gyroscope Enabled: $_gyroStatus",
+                "Gyroscope Enabled: $_gyroAvailable",
                 textAlign: TextAlign.center,
               ),
               Padding(padding: EdgeInsets.only(top: 16.0)),
@@ -162,9 +175,8 @@ class _MyAppState extends State<MyApp> {
                   MaterialButton(
                     child: Text("Start"),
                     color: Colors.green,
-                    onPressed: () {
-                      startGyroscope();
-                    },
+                    onPressed:
+                        _gyroAvailable != null ? () => _startGyroscope() : null,
                   ),
                   Padding(
                     padding: EdgeInsets.all(8.0),
@@ -172,9 +184,8 @@ class _MyAppState extends State<MyApp> {
                   MaterialButton(
                     child: Text("Stop"),
                     color: Colors.red,
-                    onPressed: () {
-                      stopGyroscope();
-                    },
+                    onPressed:
+                        _gyroAvailable != null ? () => _stopGyroscope() : null,
                   ),
                 ],
               ),
