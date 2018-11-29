@@ -22,10 +22,6 @@ class FlutterSensorsPlugin : MethodChannel.MethodCallHandler, EventChannel.Strea
             methodChannel.setMethodCallHandler(plugin)
             val eventChannel = EventChannel(registrar.messenger(), "flutter_sensors_update_channel")
             eventChannel.setStreamHandler(plugin)
-            registrar.addViewDestroyListener {
-                // If the view is destroyed we are going to remove all the listeners.
-                plugin.unregisterAllListeners()
-            }
             sensorManager = registrar.context().getSystemService(Context.SENSOR_SERVICE) as SensorManager
         }
     }
@@ -52,58 +48,12 @@ class FlutterSensorsPlugin : MethodChannel.MethodCallHandler, EventChannel.Strea
         }
     }
 
-    override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
-        when {
-            call.method == "is_sensor_available" -> {
-                val dataMap = call.arguments as Map<*, *>
-                val sensorType: Int = dataMap["sensor"] as Int
-                val isAvailable = isSensorAvailable(sensorType)
-                result.success(isAvailable)
-                return
-            }
-            call.method == "register_sensor_listener" -> {
-                try {
-                    val dataMap = call.arguments as Map<*, *>
-                    val sensorType: Int = dataMap["sensor"] as Int
-                    val rate: Int? = dataMap["rate"] as Int?
-                    val sampling = if (rate == null) SensorManager.SENSOR_DELAY_NORMAL else rate
-                    val sensor = sensorManager.getDefaultSensor(sensorType)
-                    val register = sensorManager.registerListener(listener, sensor, sampling)
-                    result.success(register)
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    result.success(false)
-                }
-                return
-            }
-            call.method == "unregister_sensor_listener" -> {
-                try {
-                    val dataMap = call.arguments as Map<*, *>
-                    val sensorType: Int = dataMap["sensor"] as Int
-                    val sensor = sensorManager.getDefaultSensor(sensorType)
-                    sensorManager.unregisterListener(listener, sensor)
-                    result.success(true)
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    result.success(false)
-                }
-                return
-            }
-            call.method == "unregister_all_listeners" -> {
-                val unregister = unregisterAllListeners()
-                result.success(unregister)
-                return
-            }
-            else -> result.notImplemented()
-        }
-    }
-
     override fun onListen(args: Any?, sink: EventChannel.EventSink?) {
         sinks.add(sink)
+
     }
 
     override fun onCancel(p0: Any?) {
-        unregisterAllListeners()
         sinks.forEach {
             it?.endOfStream()
         }
@@ -116,17 +66,48 @@ class FlutterSensorsPlugin : MethodChannel.MethodCallHandler, EventChannel.Strea
         }
     }
 
-    private fun isSensorAvailable(sensor: Int): Boolean {
-        return sensorManager.getSensorList(sensor).isNotEmpty()
+    override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
+        when(call.method) {
+            "is_sensor_available" -> isSensorAvailable(call.arguments, result)
+            "register_sensor_listener" -> registerSensorListener(call.arguments, result)
+            "unregister_sensor_listener" -> unregisterSensorListener(call.arguments, result)
+            else -> result.notImplemented()
+        }
     }
 
-    private fun unregisterAllListeners(): Boolean {
-        return try {
-            sensorManager.unregisterListener(listener)
-            true
-        } catch (ex: Exception) {
-            ex.printStackTrace()
-            false
+    private fun isSensorAvailable(arguments:Any, result:MethodChannel.Result) {
+        val dataMap = arguments as Map<*, *>
+        val sensorType: Int = dataMap["sensor"] as Int
+        val isAvailable = sensorManager.getSensorList(sensorType).isNotEmpty()
+        result.success(isAvailable)
+        return
+    }
+
+    private fun registerSensorListener(arguments:Any, result:MethodChannel.Result){
+        try {
+            val dataMap = arguments as Map<*, *>
+            val sensorType: Int = dataMap["sensor"] as Int
+            val rate: Int? = dataMap["rate"] as Int?
+            val sampling = if (rate == null) SensorManager.SENSOR_DELAY_NORMAL else rate
+            val sensor = sensorManager.getDefaultSensor(sensorType)
+            val register = sensorManager.registerListener(listener, sensor, sampling)
+            result.success(register)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            result.success(false)
+        }
+    }
+
+    private fun unregisterSensorListener(arguments:Any, result:MethodChannel.Result){
+        try {
+            val dataMap = arguments as Map<*, *>
+            val sensorType: Int = dataMap["sensor"] as Int
+            val sensor = sensorManager.getDefaultSensor(sensorType)
+            sensorManager.unregisterListener(listener, sensor)
+            result.success(true)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            result.success(false)
         }
     }
 }

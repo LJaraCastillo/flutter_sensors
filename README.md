@@ -29,26 +29,17 @@ You need to add the following key-value pair into your **Info.plist** file insid
 
 ## How to use
 
-First initialize an instance of *SensorManager* class.
+You register a new listener for an specific sensor.
 
 ```dart
-class _MyAppState extends State<MyApp> {
-  SensorManager _sensorManager = SensorManager();
-  ...
-```
-
-Then you can register a new listener for an specific sensor.
-
-```dart
-_sensorManager.registerSensorListener(
-        Sensors.ACCELEROMETER,
-        (sensor, data, accuracy) {
-            //do stuff here
-        },
-        refreshRate: Duration(
-          milliseconds: 250,
-        ),
-      );
+_accelSubscription = SensorManager.sensorUpdates(SensorRequest(
+        Sensors.ACCELEROMETER, // Desired sensor
+        refreshDelay: Sensors.SENSOR_DELAY_GAME, // Refresh delay
+      )).listen((sensorEvent) {
+        setState(() {
+          _accelData = sensorEvent.data;
+        });
+      });
 ```
 
 Also, you can check if an specific sensor is available.
@@ -58,26 +49,10 @@ bool accelerometerAvailable =
         await SensorManager.isSensorAvailable(Sensors.ACCELEROMETER);
 ```
 
-If you want to remove a listener.
+Remember to cancel your **StreamSubscriptions** after you are done with the sensor updates.
 
 ```dart
-_sensorManager.unregisterSensorListener(Sensors.ACCELEROMETER);
-```
-
-or to remove them all.
-
-```dart
-_sensorManager.unregisterAllListeners();
-```
-
-**Important:** To avoid memory leaks, you must discard the instance so that the platform code removes registered listeners and stops sending updates to the dart layer.
-
-```dart
-@override
-void dispose() {
-    _sensorManager.dispose();
-    super.dispose();
-}
+_accelSubscription.cancel();
 ```
 
 ### Android Only
@@ -86,20 +61,18 @@ You can give the ID of a sensor without using the **Sensors** class. Example: re
 
 ```dart
 int TYPE_LIGHT = 5; // TYPE_LIGHT is equals to 5
-// Check if is available.
+// Checking if is available.
 bool isAvailable = SensorManager.isSensorAvailable(TYPE_LIGHT);
-// Registering a listener.
-_sensorManager.registerSensorListener(
-        TYPE_LIGHT, // TYPE_LIGHT is equals to 5
-        (sensor, data, accuracy) {
-            // do stuff here
-        },
-        refreshRate: Duration(
-          milliseconds: 250,
-        ),
-      );
- // Removing the listener.
-_sensorManager.unregisterSensorListener(TYPE_LIGHT);
+// Initialize a stream to receive the updates.
+_lightSubscription =
+          SensorManager.sensorUpdates(SensorRequest(TYPE_LIGHT))
+              .listen((sensorEvent) {
+        setState(() {
+          _lightData = sensorEvent.data;
+        });
+      });
+ // Cancel the stream after using it.
+_lightSubscription.cancel();
 ```
 
 You can get the rest of the IDs from [here](https://developer.android.com/reference/android/hardware/Sensor#TYPE_LIGHT).

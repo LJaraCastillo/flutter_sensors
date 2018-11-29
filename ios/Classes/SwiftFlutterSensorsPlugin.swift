@@ -22,11 +22,6 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin, FlutterStreamHa
         registrar.addMethodCallDelegate(instance, channel: channel)
         let eventChannel = FlutterEventChannel(name:"flutter_sensors_update_channel", binaryMessenger: registrar.messenger())
         eventChannel.setStreamHandler(instance)
-        registrar.addApplicationDelegate(instance)
-    }
-    
-    public func applicationWillTerminate(_ application: UIApplication) {
-        unregisterAllListeners()
     }
     
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -53,10 +48,6 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin, FlutterStreamHa
             let unregistered = unregisterSensorListener(sensorType: sensorType)
             result(unregistered)
             break
-        case "unregister_all_listeners":
-            unregisterAllListeners()
-            result(true)
-            break
         default:
             result("iOS " + UIDevice.current.systemVersion)
         }
@@ -68,7 +59,6 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin, FlutterStreamHa
     }
     
     public func onCancel(withArguments arguments: Any?) -> FlutterError? {
-        unregisterAllListeners()
         sinks.removeAll()
         return nil
     }
@@ -233,19 +223,5 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin, FlutterStreamHa
             })
             self.isAccelerometerActive = true
         }
-    }
-    
-    private func stopAccelerometer(){
-        motionManager.stopAccelerometerUpdates()
-        self.isAccelerometerActive = false
-        self.notifyAcceleration = false
-        self.notifyLinearAcceleration = false
-    }
-    
-    private func unregisterAllListeners(){
-        stopAccelerometer()
-        motionManager.stopGyroUpdates()
-        motionManager.stopMagnetometerUpdates()
-        pedometer.stopUpdates()
     }
 }
