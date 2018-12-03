@@ -35,7 +35,7 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin, FlutterStreamHa
         case "register_sensor_listener":
             let dataMap = call.arguments as! NSDictionary
             let sensorType  = dataMap["sensor"] as! Int
-            var rate = dataMap["rate"] as! Int?
+            var rate = dataMap["delay"] as! Int?
             if(rate == nil){
                 rate = 1/60 // Default interval of 60hz
             }

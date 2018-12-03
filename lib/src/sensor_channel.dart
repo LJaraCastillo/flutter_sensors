@@ -11,11 +11,10 @@ class _SensorChannel {
       _eventChannel.receiveBroadcastStream().map((data) {
     return SensorEvent.fromMap(data);
   });
-  final List<_SensorUpdateSubscription> _updatesSubscriptions = [];
+  final List<StreamSubscription> _updatesSubscriptions = [];
 
   Stream<SensorEvent> sensorUpdates(SensorRequest request) {
     StreamController<SensorEvent> controller;
-    _SensorUpdateSubscription sensorUpdateSubscription;
     request.refreshDelay = request.refreshDelay != null
         ? request.refreshDelay
         : Sensors.SENSOR_DELAY_NORMAL;
@@ -26,20 +25,17 @@ class _SensorChannel {
       }
     });
     updatesSubscription.onDone(() {
-      _updatesSubscriptions.remove(sensorUpdateSubscription);
+      _updatesSubscriptions.remove(updatesSubscription);
     });
-    sensorUpdateSubscription = _SensorUpdateSubscription(
-      updatesSubscription,
-    );
-    _updatesSubscriptions.add(sensorUpdateSubscription);
-    controller = new StreamController<SensorEvent>.broadcast(
+    _updatesSubscriptions.add(updatesSubscription);
+    controller = StreamController<SensorEvent>.broadcast(
       onListen: () {
         _methodChannel.invokeMethod(
             "register_sensor_listener", request.toMap());
       },
       onCancel: () {
-        sensorUpdateSubscription.subscription.cancel();
-        _updatesSubscriptions.remove(sensorUpdateSubscription);
+        updatesSubscription.cancel();
+        _updatesSubscriptions.remove(updatesSubscription);
         _methodChannel.invokeMethod(
           "unregister_sensor_listener",
           {"sensor": request.sensor},
@@ -51,7 +47,6 @@ class _SensorChannel {
 
   Stream<SensorEvent> sensorsUpdates(List<SensorRequest> requests) {
     StreamController<SensorEvent> controller;
-    _SensorUpdateSubscription sensorUpdateSubscription;
     // If the delay is null we set it as normal.
     requests.forEach((request) => request.refreshDelay =
         request.refreshDelay != null
@@ -67,20 +62,17 @@ class _SensorChannel {
       }
     });
     updatesSubscription.onDone(() {
-      _updatesSubscriptions.remove(sensorUpdateSubscription);
+      _updatesSubscriptions.remove(updatesSubscription);
     });
-    sensorUpdateSubscription = _SensorUpdateSubscription(
-      updatesSubscription,
-    );
-    _updatesSubscriptions.add(sensorUpdateSubscription);
-    controller = new StreamController<SensorEvent>.broadcast(
+    _updatesSubscriptions.add(updatesSubscription);
+    controller = StreamController<SensorEvent>.broadcast(
       onListen: () {
         requests.forEach((request) => _methodChannel.invokeMethod(
             "register_sensor_listener", request.toMap()));
       },
       onCancel: () {
-        sensorUpdateSubscription.subscription.cancel();
-        _updatesSubscriptions.remove(sensorUpdateSubscription);
+        updatesSubscription.cancel();
+        _updatesSubscriptions.remove(updatesSubscription);
         requests.forEach((request) => _methodChannel.invokeMethod(
             "unregister_sensor_listener", {"sensor": request.sensor}));
       },
@@ -95,10 +87,4 @@ class _SensorChannel {
     );
     return isAvailable;
   }
-}
-
-class _SensorUpdateSubscription {
-  _SensorUpdateSubscription(this.subscription);
-
-  final StreamSubscription<SensorEvent> subscription;
 }

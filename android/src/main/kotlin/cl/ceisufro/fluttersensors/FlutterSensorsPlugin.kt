@@ -5,7 +5,6 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
-import android.util.Log
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
@@ -87,8 +86,8 @@ class FlutterSensorsPlugin : MethodChannel.MethodCallHandler, EventChannel.Strea
         try {
             val dataMap = arguments as Map<*, *>
             val sensorType: Int = dataMap["sensor"] as Int
-            val rate: Int? = dataMap["rate"] as Int?
-            val sampling = if (rate == null) SensorManager.SENSOR_DELAY_NORMAL else rate
+            val rate: Int? = dataMap["delay"] as Int?
+            val sampling = rate ?: SensorManager.SENSOR_DELAY_NORMAL
             val sensor = sensorManager.getDefaultSensor(sensorType)
             val register = sensorManager.registerListener(listener, sensor, sampling)
             result.success(register)
