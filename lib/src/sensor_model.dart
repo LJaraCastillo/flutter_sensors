@@ -6,11 +6,11 @@ class SensorRequest {
 
   SensorRequest(this.sensor, {this.refreshDelay = Sensors.SENSOR_DELAY_NORMAL});
 
-  Map<String, int> toMap() => {
+  Map<String, dynamic> toMap() => {
         "sensor": this.sensor,
         "delay": Platform.isAndroid
             ? this.refreshDelay.inMicroseconds
-            : this.refreshDelay.inSeconds
+            : this.refreshDelay.inMicroseconds / 1000000
       };
 }
 

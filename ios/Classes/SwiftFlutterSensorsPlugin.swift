@@ -8,13 +8,10 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin, FlutterStreamHa
     private let MAGNETIC_FIELD_ID:Int = 1
     private let LINEAR_ACCELERATION_ID:Int = 10
     private let STEP_DETECTOR_ID:Int = 18
-    private let motionManager=CMMotionManager()
-    private let deviceMotion=CMDeviceMotion()
-    private let pedometer=CMPedometer()
+    private let motionManager = CMMotionManager()
+    private let deviceMotion = CMDeviceMotion()
+    private let pedometer = CMPedometer()
     private var sinks: [FlutterEventSink] = []
-    private var notifyLinearAcceleration = false
-    private var notifyAcceleration = false
-    private var isAccelerometerActive = false
     
     public static func register(with registrar: FlutterPluginRegistrar) {
         let instance = SwiftFlutterSensorsPlugin()
@@ -35,11 +32,8 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin, FlutterStreamHa
         case "register_sensor_listener":
             let dataMap = call.arguments as! NSDictionary
             let sensorType  = dataMap["sensor"] as! Int
-            var rate = dataMap["delay"] as! Int?
-            if(rate == nil){
-                rate = 1/60 // Default interval of 60hz
-            }
-            let registered = registerSensorListener(sensorType: sensorType, updateInterval: rate!)
+            let rate = dataMap["delay"] as! Double
+            let registered = registerSensorListener(sensorType: sensorType, updateInterval: rate)
             result(registered)
             break
         case "unregister_sensor_listener":
@@ -87,7 +81,7 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin, FlutterStreamHa
             isAvailable = motionManager.isMagnetometerAvailable
             break
         case LINEAR_ACCELERATION_ID:
-            isAvailable = motionManager.isAccelerometerAvailable
+            isAvailable = motionManager.isDeviceMotionAvailable
             break
         case STEP_DETECTOR_ID:
             isAvailable = CMPedometer.isStepCountingAvailable()
@@ -99,13 +93,23 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin, FlutterStreamHa
         return isAvailable
     }
     
-    private func registerSensorListener(sensorType:Int, updateInterval:Int)->Bool{
+    private func registerSensorListener(sensorType:Int, updateInterval:Double)->Bool{
         var registered = false
         if(self.isSensorAvailable(sensorType: sensorType)){
             switch sensorType {
             case ACCELEROMETER_ID:
-                self.notifyAcceleration = true
-                self.startAccelerometerUpdates(updateInverval: updateInterval)
+                motionManager.accelerometerUpdateInterval = TimeInterval(updateInterval)
+                motionManager.startAccelerometerUpdates(to: OperationQueue.current!, withHandler: {data, error in
+                    guard error == nil else { return }
+                    guard let accelerometerData = data else { return }
+                    let correctedData = self.correctData(data: accelerometerData.acceleration)
+                    let dataArray = [
+                        correctedData.x,
+                        correctedData.y,
+                        correctedData.z
+                    ]
+                    self.notify(sensorType: self.ACCELEROMETER_ID, sensorData: dataArray)
+                })
                 registered = true
                 break
             case GYROSCOPE_ID:
@@ -137,15 +141,24 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin, FlutterStreamHa
                 registered = true
                 break
             case LINEAR_ACCELERATION_ID:
-                self.notifyLinearAcceleration = true
-                self.startAccelerometerUpdates(updateInverval: updateInterval)
+                motionManager.deviceMotionUpdateInterval = TimeInterval(updateInterval)
+                motionManager.startDeviceMotionUpdates(to: OperationQueue.current!, withHandler: {data, error in
+                    guard error == nil else { return }
+                    guard let deviceMotionData = data else { return }
+                    let correctedData = self.correctData(data: deviceMotionData.userAcceleration)
+                    let dataArray = [
+                        correctedData.x,
+                        correctedData.y,
+                        correctedData.z
+                    ]
+                    self.notify(sensorType: self.LINEAR_ACCELERATION_ID, sensorData: dataArray)
+                })
                 registered = true
                 break
             case STEP_DETECTOR_ID:
                 // The updates of this one depends of the user and does not need an inverval.
                 pedometer.startUpdates(from: Date(), withHandler: {data, error in
                     guard error == nil else { return }
-                    guard let pedometerData = data else { return }
                     let steps = [1.0]
                     self.notify(sensorType: self.STEP_DETECTOR_ID, sensorData: steps)
                 })
@@ -163,11 +176,7 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin, FlutterStreamHa
         var unregistered = false
         switch sensorType {
         case ACCELEROMETER_ID:
-            self.notifyAcceleration = false
-            if(!self.notifyLinearAcceleration){
-                motionManager.stopAccelerometerUpdates()
-                self.isAccelerometerActive = false
-            }
+            motionManager.stopAccelerometerUpdates()
             unregistered = true
             break
         case GYROSCOPE_ID:
@@ -179,11 +188,7 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin, FlutterStreamHa
             unregistered = true
             break
         case LINEAR_ACCELERATION_ID:
-            self.notifyLinearAcceleration = false
-            if(!self.notifyAcceleration){
-                motionManager.stopAccelerometerUpdates()
-                self.isAccelerometerActive = false
-            }
+            motionManager.stopDeviceMotionUpdates()
             unregistered = true
             break
         case STEP_DETECTOR_ID:
@@ -197,31 +202,9 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin, FlutterStreamHa
         return unregistered
     }
     
-    private func startAccelerometerUpdates(updateInverval:Int){
-        if(!self.isAccelerometerActive){
-            motionManager.accelerometerUpdateInterval = TimeInterval(updateInverval)
-            motionManager.startAccelerometerUpdates(to: OperationQueue.current!, withHandler:{data, error in
-                guard error == nil else { return }
-                guard let accelerometerData = data else { return }
-                let dataArray = [
-                    accelerometerData.acceleration.x,
-                    accelerometerData.acceleration.y,
-                    accelerometerData.acceleration.z
-                ]
-                if(self.notifyAcceleration){
-                    self.notify(sensorType: self.ACCELEROMETER_ID, sensorData: dataArray)
-                }
-                if(self.notifyLinearAcceleration){
-                    let gravity = self.deviceMotion.gravity
-                    let linearAcc = [
-                        accelerometerData.acceleration.x - gravity.x,
-                        accelerometerData.acceleration.y - gravity.y,
-                        accelerometerData.acceleration.z - gravity.z
-                    ]
-                    self.notify(sensorType: self.LINEAR_ACCELERATION_ID, sensorData: linearAcc)
-                }
-            })
-            self.isAccelerometerActive = true
-        }
+    // This functions inverts the axis of each axis of the acceleration and
+    // transforms it to m/s^2.
+    private func correctData(data:CMAcceleration) -> CMAcceleration {
+        return CMAcceleration(x: data.x * -10, y: data.y * -10, z: data.z * -10)
     }
 }
