@@ -19,3 +19,4 @@
 # Visual Studio Code related
 .vscode/
 .packages
+.idea/
