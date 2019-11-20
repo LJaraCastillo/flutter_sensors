@@ -1,16 +1,19 @@
 import Flutter
 import UIKit
 import CoreMotion
+import CoreLocation
 
-public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
+public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin, FlutterStreamHandler, CLLocationManagerDelegate {
     private let ACCELEROMETER_ID:Int = 1
     private let GYROSCOPE_ID:Int = 4
-    private let MAGNETIC_FIELD_ID:Int = 1
+    private let MAGNETIC_FIELD_ID:Int = 2
     private let LINEAR_ACCELERATION_ID:Int = 10
     private let STEP_DETECTOR_ID:Int = 18
+    private let HEADING_ID:Int = 11
     private let motionManager = CMMotionManager()
     private let deviceMotion = CMDeviceMotion()
     private let pedometer = CMPedometer()
+    private let locationManager = CLLocationManager()
     private var sinks: [FlutterEventSink] = []
     
     public static func register(with registrar: FlutterPluginRegistrar) {
@@ -85,6 +88,9 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin, FlutterStreamHa
             break
         case STEP_DETECTOR_ID:
             isAvailable = CMPedometer.isStepCountingAvailable()
+            break
+        case HEADING_ID:
+            isAvailable = CLLocationManager.headingAvailable()
             break
         default:
             isAvailable = false
@@ -164,6 +170,11 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin, FlutterStreamHa
                 })
                 registered = true
                 break
+            case HEADING_ID:
+                // The updates of this one depends of the user and does not need an inverval.
+                locationManager.startUpdatingHeading()
+                locationManager.delegate = self
+                break
             default:
                 registered = false
                 break
@@ -195,6 +206,11 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin, FlutterStreamHa
             pedometer.stopUpdates()
             unregistered = true
             break
+        case HEADING_ID:
+            locationManager.delegate = nil
+            locationManager.stopUpdatingHeading()
+            unregistered = true
+            break
         default:
             unregistered = false
             break
@@ -202,7 +218,16 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin, FlutterStreamHa
         return unregistered
     }
     
-    // This functions inverts the axis of each axis of the acceleration and
+    public func locationManager(_ manager: CLLocationManager, didUpdateHeading newHeading: CLHeading) {
+        let data = [newHeading.magneticHeading]
+        self.notify(sensorType: self.HEADING_ID, sensorData: data)
+    }
+    
+    public func locationManagerShouldDisplayHeadingCalibration(_ manager: CLLocationManager) -> Bool {
+        return true
+    }
+    
+    // This functions inverts the value of each axis of the acceleration and
     // transforms it to m/s^2.
     private func correctData(data:CMAcceleration) -> CMAcceleration {
         return CMAcceleration(x: data.x * -10, y: data.y * -10, z: data.z * -10)

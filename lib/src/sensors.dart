@@ -8,6 +8,14 @@ class Sensors {
   static const int LINEAR_ACCELERATION = 10;
   static const int STEP_DETECTOR = 18;
 
+  /// This sensor is different for each platform.
+  /// Android: Returns a list of 3 values for each axis (x, y & z). The rotation
+  /// matrix an azimuth must be computed manually given that this sensor only
+  /// gives the raw values.
+  /// iOS: Returns a list but with only one value (index 0) with the azimuth
+  /// computed by the system.
+  static const int ROTATION = 11;
+
   // Sensor delay
   static const Duration SENSOR_DELAY_NORMAL = Duration(microseconds: 200000);
   static const Duration SENSOR_DELAY_UI = Duration(microseconds: 60000);
