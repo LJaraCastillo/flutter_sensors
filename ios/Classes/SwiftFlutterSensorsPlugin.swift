@@ -11,7 +11,6 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin, FlutterStreamHa
     private let STEP_DETECTOR_ID:Int = 18
     private let HEADING_ID:Int = 11
     private let motionManager = CMMotionManager()
-    private let deviceMotion = CMDeviceMotion()
     private let pedometer = CMPedometer()
     private let locationManager = CLLocationManager()
     private var sinks: [FlutterEventSink] = []
@@ -133,14 +132,15 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin, FlutterStreamHa
                 registered = true
                 break
             case MAGNETIC_FIELD_ID:
-                motionManager.magnetometerUpdateInterval = TimeInterval(updateInterval)
-                motionManager.startMagnetometerUpdates(to: OperationQueue.current!, withHandler:{data, error in
+                motionManager.deviceMotionUpdateInterval = TimeInterval(updateInterval)
+                motionManager.showsDeviceMovementDisplay = true
+                motionManager.startDeviceMotionUpdates(using:CMAttitudeReferenceFrame.xMagneticNorthZVertical, to: OperationQueue.current!, withHandler:{data, error in
                     guard error == nil else { return }
                     guard let magnetometerData = data else { return }
                     let dataArray = [
-                        magnetometerData.magneticField.x,
-                        magnetometerData.magneticField.y,
-                        magnetometerData.magneticField.z
+                        magnetometerData.magneticField.field.x,
+                        magnetometerData.magneticField.field.y,
+                        magnetometerData.magneticField.field.z
                     ]
                     self.notify(sensorType: self.MAGNETIC_FIELD_ID, sensorData: dataArray)
                 })
