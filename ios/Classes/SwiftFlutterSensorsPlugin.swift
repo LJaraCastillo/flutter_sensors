@@ -107,11 +107,11 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin, FlutterStreamHa
                 motionManager.startAccelerometerUpdates(to: OperationQueue.current!, withHandler: {data, error in
                     guard error == nil else { return }
                     guard let accelerometerData = data else { return }
-                    let correctedData = self.correctData(data: accelerometerData.acceleration)
+                    let values = accelerometerData.acceleration
                     let dataArray = [
-                        correctedData.x,
-                        correctedData.y,
-                        correctedData.z
+                        values.x,
+                        values.y,
+                        values.z
                     ]
                     self.notify(sensorType: self.ACCELEROMETER_ID, sensorData: dataArray)
                 })
@@ -136,11 +136,11 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin, FlutterStreamHa
                 motionManager.showsDeviceMovementDisplay = true
                 motionManager.startDeviceMotionUpdates(using:CMAttitudeReferenceFrame.xMagneticNorthZVertical, to: OperationQueue.current!, withHandler:{data, error in
                     guard error == nil else { return }
-                    guard let magnetometerData = data else { return }
+                    guard let deviceMotion = data else { return }
                     let dataArray = [
-                        magnetometerData.magneticField.field.x,
-                        magnetometerData.magneticField.field.y,
-                        magnetometerData.magneticField.field.z
+                        deviceMotion.magneticField.field.x,
+                        deviceMotion.magneticField.field.y,
+                        deviceMotion.magneticField.field.z
                     ]
                     self.notify(sensorType: self.MAGNETIC_FIELD_ID, sensorData: dataArray)
                 })
@@ -151,11 +151,11 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin, FlutterStreamHa
                 motionManager.startDeviceMotionUpdates(to: OperationQueue.current!, withHandler: {data, error in
                     guard error == nil else { return }
                     guard let deviceMotionData = data else { return }
-                    let correctedData = self.correctData(data: deviceMotionData.userAcceleration)
+                    let values = deviceMotionData.userAcceleration
                     let dataArray = [
-                        correctedData.x,
-                        correctedData.y,
-                        correctedData.z
+                        values.x,
+                        values.y,
+                        values.z
                     ]
                     self.notify(sensorType: self.LINEAR_ACCELERATION_ID, sensorData: dataArray)
                 })
@@ -225,11 +225,5 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin, FlutterStreamHa
     
     public func locationManagerShouldDisplayHeadingCalibration(_ manager: CLLocationManager) -> Bool {
         return true
-    }
-    
-    // This functions inverts the value of each axis of the acceleration and
-    // transforms it to m/s^2.
-    private func correctData(data:CMAcceleration) -> CMAcceleration {
-        return CMAcceleration(x: data.x * -10, y: data.y * -10, z: data.z * -10)
     }
 }
