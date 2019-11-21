@@ -32,7 +32,9 @@ class _MyAppState extends State<MyApp> {
   }
 
   void _checkAccelerometerStatus() async {
-    await SensorManager.isSensorAvailable(Sensors.ACCELEROMETER).then((result) {
+    await SensorManager()
+        .isSensorAvailable(Sensors.ACCELEROMETER)
+        .then((result) {
       setState(() {
         _accelAvailable = result;
       });
@@ -42,10 +44,11 @@ class _MyAppState extends State<MyApp> {
   Future<void> _startAccelerometer() async {
     if (_accelSubscription != null) return;
     if (_accelAvailable) {
-      _accelSubscription = SensorManager.sensorUpdates(SensorRequest(
-        Sensors.ACCELEROMETER,
-        refreshDelay: Sensors.SENSOR_DELAY_GAME,
-      )).listen((sensorEvent) {
+      _accelSubscription = SensorManager()
+          .sensorUpdates(
+              sensorId: Sensors.ACCELEROMETER,
+              interval: Sensors.SENSOR_DELAY_GAME)
+          .listen((sensorEvent) {
         setState(() {
           _accelData = sensorEvent.data;
         });
@@ -60,7 +63,7 @@ class _MyAppState extends State<MyApp> {
   }
 
   void _checkGyroscopeStatus() async {
-    await SensorManager.isSensorAvailable(Sensors.GYROSCOPE).then((result) {
+    await SensorManager().isSensorAvailable(Sensors.GYROSCOPE).then((result) {
       setState(() {
         _gyroAvailable = result;
       });
@@ -71,7 +74,7 @@ class _MyAppState extends State<MyApp> {
     if (_gyroSubscription != null) return;
     if (_gyroAvailable) {
       _gyroSubscription =
-          SensorManager.sensorUpdates(SensorRequest(Sensors.GYROSCOPE))
+          SensorManager().sensorUpdates(sensorId: Sensors.GYROSCOPE)
               .listen((sensorEvent) {
         setState(() {
           _gyroData = sensorEvent.data;

@@ -7,25 +7,37 @@ import 'package:flutter/services.dart';
 
 part 'src/sensor_channel.dart';
 
-part 'src/sensor_model.dart';
+part 'src/sensor_event.dart';
 
 part 'src/sensors.dart';
 
 class SensorManager {
-  static final _SensorChannel _sensorChannel = _SensorChannel();
+  /// Singleton for the sensor manager.
+  static final SensorManager _singleton = SensorManager._internal();
+
+  /// Returns the singleton instance. Builds the instance first if is null.
+  factory SensorManager(){
+    return _singleton;
+  }
+
+  /// Internal constructor of the class.
+  SensorManager._internal();
+
+  /// Sensor channel to call the platform methods.
+  final _SensorChannel _sensorChannel = _SensorChannel();
 
   /// Opens a stream to receive sensor updates from the desired sensor
   /// defined in the [request].
-  static Stream<SensorEvent> sensorUpdates(SensorRequest request) =>
-      _sensorChannel.sensorUpdates(request);
+  Stream<SensorEvent> sensorUpdates({int sensorId, Duration interval}) =>
+      _sensorChannel.sensorUpdates(sensorId: sensorId, interval: interval);
 
-  /// Opens a stream to receive sensor updates from the desired sensors.
-  /// Requires a list of requests.
-  static Stream<SensorEvent> sensorsUpdates(List<SensorRequest> request) =>
-      _sensorChannel.sensorsUpdates(request);
-
-  /// Checks if the [sensor] is available in the system or supported by the
+  /// Checks if the [sensorId] is available in the system or supported by the
   /// plugin.
-  static Future<bool> isSensorAvailable(int sensor) =>
-      _SensorChannel.isSensorAvailable(sensor);
+  Future<bool> isSensorAvailable(int sensorId) =>
+      _sensorChannel.isSensorAvailable(sensorId);
+
+  /// Updates the interval between updates for an specific sensor.
+  Future updateSensorInterval({int sensorId, Duration interval}) =>
+      _sensorChannel.updateSensorInterval(
+          sensorId: sensorId, interval: interval);
 }

@@ -3,93 +3,83 @@ import UIKit
 import CoreMotion
 import CoreLocation
 
-public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin, FlutterStreamHandler, CLLocationManagerDelegate {
-    private let ACCELEROMETER_ID:Int = 1
-    private let GYROSCOPE_ID:Int = 4
-    private let MAGNETIC_FIELD_ID:Int = 2
-    private let LINEAR_ACCELERATION_ID:Int = 10
-    private let STEP_DETECTOR_ID:Int = 18
-    private let HEADING_ID:Int = 11
-    private let motionManager = CMMotionManager()
-    private let pedometer = CMPedometer()
-    private let locationManager = CLLocationManager()
-    private var sinks: [FlutterEventSink] = []
-    
+public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin {
+    public let accelerometerStreamHandler = AccelerometerStreamHandler()
+    public let gyroscopeStreamHandler = GyroscopeStreamHandler()
+    public let headingStreamHandler = HeadingStreamHandler()
+    public let linearAccelerationStreamHandler = LinearAccelerationStreamHandler()
+    public let magneticFieldStreamHandler = MagneticFieldStreamHandler()
+    public let stepDetectorStreamHandler = StepDetectorStreamHandler()
+
     public static func register(with registrar: FlutterPluginRegistrar) {
         let instance = SwiftFlutterSensorsPlugin()
-        let channel = FlutterMethodChannel(name: "flutter_sensors", binaryMessenger: registrar.messenger())
+        let channel = FlutterMethodChannel(name: "flutter_sensors/utils", binaryMessenger: registrar.messenger())
         registrar.addMethodCallDelegate(instance, channel: channel)
-        let eventChannel = FlutterEventChannel(name:"flutter_sensors_update_channel", binaryMessenger: registrar.messenger())
-        eventChannel.setStreamHandler(instance)
+        let accelerometerEventChannel = FlutterEventChannel(name:"flutter_sensors/\(AccelerometerStreamHandler.SENSOR_ID)", binaryMessenger: registrar.messenger())
+        accelerometerEventChannel.setStreamHandler(instance.accelerometerStreamHandler)
+        let gyroscopeEventChannel = FlutterEventChannel(name:"flutter_sensors/\(GyroscopeStreamHandler.SENSOR_ID)", binaryMessenger: registrar.messenger())
+        gyroscopeEventChannel.setStreamHandler(instance.gyroscopeStreamHandler)
+        let headingEventChannel = FlutterEventChannel(name:"flutter_sensors/\(HeadingStreamHandler.SENSOR_ID)", binaryMessenger: registrar.messenger())
+        headingEventChannel.setStreamHandler(instance.headingStreamHandler)
+        let linearAccelerationEventChannel = FlutterEventChannel(name:"flutter_sensors/\(LinearAccelerationStreamHandler.SENSOR_ID)", binaryMessenger: registrar.messenger())
+        linearAccelerationEventChannel.setStreamHandler(instance.linearAccelerationStreamHandler)
+        let magneticFieldEventChannel = FlutterEventChannel(name:"flutter_sensors/\(MagneticFieldStreamHandler.SENSOR_ID)", binaryMessenger: registrar.messenger())
+        magneticFieldEventChannel.setStreamHandler(instance.magneticFieldStreamHandler)
+        let stepDetectorEventChannel = FlutterEventChannel(name:"flutter_sensors/\(StepDetectorStreamHandler.SENSOR_ID)", binaryMessenger: registrar.messenger())
+        stepDetectorEventChannel.setStreamHandler(instance.stepDetectorStreamHandler)
     }
     
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         switch call.method {
         case "is_sensor_available":
             let dataMap = call.arguments as! NSDictionary
-            let sensorType = dataMap["sensor"] as! Int
-            let isAvailable = isSensorAvailable(sensorType: sensorType)
+            let sensorId = dataMap["sensorId"] as! Int
+            let isAvailable = isSensorAvailable(sensorId: sensorId)
             result(isAvailable)
             break
-        case "register_sensor_listener":
+        case "update_sensor_interval":
             let dataMap = call.arguments as! NSDictionary
-            let sensorType  = dataMap["sensor"] as! Int
-            let rate = dataMap["delay"] as! Double
-            let registered = registerSensorListener(sensorType: sensorType, updateInterval: rate)
-            result(registered)
-            break
-        case "unregister_sensor_listener":
-            let dataMap = call.arguments as! NSDictionary
-            let sensorType  = dataMap["sensor"] as! Int
-            let unregistered = unregisterSensorListener(sensorType: sensorType)
-            result(unregistered)
+            let sensorId = dataMap["sensorId"] as? Int
+            let interval = dataMap["interval"] as? Int
+            if sensorId != nil && interval != nil {
+                updateSensorInterval(sensorId: sensorId!, interval: interval!)
+            }
+            result(nil)
             break
         default:
-            result("iOS " + UIDevice.current.systemVersion)
+            result(FlutterMethodNotImplemented)
         }
     }
     
-    public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
-        sinks.append(events)
-        return nil
-    }
-    
-    public func onCancel(withArguments arguments: Any?) -> FlutterError? {
-        sinks.removeAll()
-        return nil
-    }
-    
-    private func notify(sensorType:Int, sensorData:[Double]){
+    public static func notify(sensorId:Int, sensorData:[Double], eventSink:FlutterEventSink){
         let data = [
-            "sensor": sensorType,
+            "sensorId": sensorId,
             "data": sensorData,
             "accuracy": 3 //iOS does not send this value so we will match it to the value of high accuracy of Android which is 3
             ] as [String : Any]
-        for it in sinks{
-            it(data)
-        }
+        eventSink(data)
     }
     
-    private func isSensorAvailable(sensorType:Int)->Bool{
+    private func isSensorAvailable(sensorId: Int)->Bool{
         var isAvailable = false
-        switch sensorType {
-        case ACCELEROMETER_ID:
-            isAvailable = motionManager.isAccelerometerAvailable
+        switch sensorId {
+        case AccelerometerStreamHandler.SENSOR_ID:
+            isAvailable = accelerometerStreamHandler.isAvailable()
             break
-        case GYROSCOPE_ID:
-            isAvailable = motionManager.isGyroAvailable
+        case GyroscopeStreamHandler.SENSOR_ID:
+            isAvailable = gyroscopeStreamHandler.isAvailable()
             break
-        case MAGNETIC_FIELD_ID:
-            isAvailable = motionManager.isMagnetometerAvailable
+        case MagneticFieldStreamHandler.SENSOR_ID:
+            isAvailable = magneticFieldStreamHandler.isAvailable()
             break
-        case LINEAR_ACCELERATION_ID:
-            isAvailable = motionManager.isDeviceMotionAvailable
+        case LinearAccelerationStreamHandler.SENSOR_ID:
+            isAvailable = linearAccelerationStreamHandler.isAvailable()
             break
-        case STEP_DETECTOR_ID:
-            isAvailable = CMPedometer.isStepCountingAvailable()
+        case StepDetectorStreamHandler.SENSOR_ID:
+            isAvailable = stepDetectorStreamHandler.isAvailable()
             break
-        case HEADING_ID:
-            isAvailable = CLLocationManager.headingAvailable()
+        case HeadingStreamHandler.SENSOR_ID:
+            isAvailable = headingStreamHandler.isAvailable()
             break
         default:
             isAvailable = false
@@ -98,132 +88,22 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin, FlutterStreamHa
         return isAvailable
     }
     
-    private func registerSensorListener(sensorType:Int, updateInterval:Double)->Bool{
-        var registered = false
-        if(self.isSensorAvailable(sensorType: sensorType)){
-            switch sensorType {
-            case ACCELEROMETER_ID:
-                motionManager.accelerometerUpdateInterval = TimeInterval(updateInterval)
-                motionManager.startAccelerometerUpdates(to: OperationQueue.current!, withHandler: {data, error in
-                    guard error == nil else { return }
-                    guard let accelerometerData = data else { return }
-                    let values = accelerometerData.acceleration
-                    let dataArray = [
-                        values.x,
-                        values.y,
-                        values.z
-                    ]
-                    self.notify(sensorType: self.ACCELEROMETER_ID, sensorData: dataArray)
-                })
-                registered = true
-                break
-            case GYROSCOPE_ID:
-                motionManager.gyroUpdateInterval = TimeInterval(updateInterval)
-                motionManager.startGyroUpdates(to: OperationQueue.current!, withHandler:{data, error in
-                    guard error == nil else { return }
-                    guard let gyroData = data else { return }
-                    let dataArray = [
-                        gyroData.rotationRate.x,
-                        gyroData.rotationRate.y,
-                        gyroData.rotationRate.z
-                    ]
-                    self.notify(sensorType: self.GYROSCOPE_ID, sensorData: dataArray)
-                })
-                registered = true
-                break
-            case MAGNETIC_FIELD_ID:
-                motionManager.deviceMotionUpdateInterval = TimeInterval(updateInterval)
-                motionManager.showsDeviceMovementDisplay = true
-                motionManager.startDeviceMotionUpdates(using:CMAttitudeReferenceFrame.xMagneticNorthZVertical, to: OperationQueue.current!, withHandler:{data, error in
-                    guard error == nil else { return }
-                    guard let deviceMotion = data else { return }
-                    let dataArray = [
-                        deviceMotion.magneticField.field.x,
-                        deviceMotion.magneticField.field.y,
-                        deviceMotion.magneticField.field.z
-                    ]
-                    self.notify(sensorType: self.MAGNETIC_FIELD_ID, sensorData: dataArray)
-                })
-                registered = true
-                break
-            case LINEAR_ACCELERATION_ID:
-                motionManager.deviceMotionUpdateInterval = TimeInterval(updateInterval)
-                motionManager.startDeviceMotionUpdates(to: OperationQueue.current!, withHandler: {data, error in
-                    guard error == nil else { return }
-                    guard let deviceMotionData = data else { return }
-                    let values = deviceMotionData.userAcceleration
-                    let dataArray = [
-                        values.x,
-                        values.y,
-                        values.z
-                    ]
-                    self.notify(sensorType: self.LINEAR_ACCELERATION_ID, sensorData: dataArray)
-                })
-                registered = true
-                break
-            case STEP_DETECTOR_ID:
-                // The updates of this one depends of the user and does not need an inverval.
-                pedometer.startUpdates(from: Date(), withHandler: {data, error in
-                    guard error == nil else { return }
-                    let steps = [1.0]
-                    self.notify(sensorType: self.STEP_DETECTOR_ID, sensorData: steps)
-                })
-                registered = true
-                break
-            case HEADING_ID:
-                // The updates of this one depends of the user and does not need an inverval.
-                locationManager.startUpdatingHeading()
-                locationManager.delegate = self
-                break
-            default:
-                registered = false
-                break
-            }
-        }
-        return registered
-    }
-    
-    private func unregisterSensorListener(sensorType:Int)->Bool{
-        var unregistered = false
-        switch sensorType {
-        case ACCELEROMETER_ID:
-            motionManager.stopAccelerometerUpdates()
-            unregistered = true
+    private func updateSensorInterval(sensorId: Int, interval: Int){
+        switch sensorId {
+        case AccelerometerStreamHandler.SENSOR_ID:
+            accelerometerStreamHandler.setInterval(interval: interval)
             break
-        case GYROSCOPE_ID:
-            motionManager.stopGyroUpdates()
-            unregistered = true
+        case GyroscopeStreamHandler.SENSOR_ID:
+            gyroscopeStreamHandler.setInterval(interval: interval)
             break
-        case MAGNETIC_FIELD_ID:
-            motionManager.stopMagnetometerUpdates()
-            unregistered = true
+        case MagneticFieldStreamHandler.SENSOR_ID:
+            magneticFieldStreamHandler.setInterval(interval: interval)
             break
-        case LINEAR_ACCELERATION_ID:
-            motionManager.stopDeviceMotionUpdates()
-            unregistered = true
-            break
-        case STEP_DETECTOR_ID:
-            pedometer.stopUpdates()
-            unregistered = true
-            break
-        case HEADING_ID:
-            locationManager.delegate = nil
-            locationManager.stopUpdatingHeading()
-            unregistered = true
+        case LinearAccelerationStreamHandler.SENSOR_ID:
+            linearAccelerationStreamHandler.setInterval(interval: interval)
             break
         default:
-            unregistered = false
             break
         }
-        return unregistered
-    }
-    
-    public func locationManager(_ manager: CLLocationManager, didUpdateHeading newHeading: CLHeading) {
-        let data = [newHeading.magneticHeading]
-        self.notify(sensorType: self.HEADING_ID, sensorData: data)
-    }
-    
-    public func locationManagerShouldDisplayHeadingCalibration(_ manager: CLLocationManager) -> Bool {
-        return true
     }
 }
