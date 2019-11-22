@@ -4,6 +4,7 @@ import CoreMotion
 import CoreLocation
 
 public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin {
+    private let registrar: FlutterPluginRegistrar
     public let accelerometerStreamHandler = AccelerometerStreamHandler()
     public let gyroscopeStreamHandler = GyroscopeStreamHandler()
     public let headingStreamHandler = HeadingStreamHandler()
@@ -12,21 +13,13 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin {
     public let stepDetectorStreamHandler = StepDetectorStreamHandler()
 
     public static func register(with registrar: FlutterPluginRegistrar) {
-        let instance = SwiftFlutterSensorsPlugin()
+        let instance = SwiftFlutterSensorsPlugin(registrar: registrar)
         let channel = FlutterMethodChannel(name: "flutter_sensors/utils", binaryMessenger: registrar.messenger())
         registrar.addMethodCallDelegate(instance, channel: channel)
-        let accelerometerEventChannel = FlutterEventChannel(name:"flutter_sensors/\(AccelerometerStreamHandler.SENSOR_ID)", binaryMessenger: registrar.messenger())
-        accelerometerEventChannel.setStreamHandler(instance.accelerometerStreamHandler)
-        let gyroscopeEventChannel = FlutterEventChannel(name:"flutter_sensors/\(GyroscopeStreamHandler.SENSOR_ID)", binaryMessenger: registrar.messenger())
-        gyroscopeEventChannel.setStreamHandler(instance.gyroscopeStreamHandler)
-        let headingEventChannel = FlutterEventChannel(name:"flutter_sensors/\(HeadingStreamHandler.SENSOR_ID)", binaryMessenger: registrar.messenger())
-        headingEventChannel.setStreamHandler(instance.headingStreamHandler)
-        let linearAccelerationEventChannel = FlutterEventChannel(name:"flutter_sensors/\(LinearAccelerationStreamHandler.SENSOR_ID)", binaryMessenger: registrar.messenger())
-        linearAccelerationEventChannel.setStreamHandler(instance.linearAccelerationStreamHandler)
-        let magneticFieldEventChannel = FlutterEventChannel(name:"flutter_sensors/\(MagneticFieldStreamHandler.SENSOR_ID)", binaryMessenger: registrar.messenger())
-        magneticFieldEventChannel.setStreamHandler(instance.magneticFieldStreamHandler)
-        let stepDetectorEventChannel = FlutterEventChannel(name:"flutter_sensors/\(StepDetectorStreamHandler.SENSOR_ID)", binaryMessenger: registrar.messenger())
-        stepDetectorEventChannel.setStreamHandler(instance.stepDetectorStreamHandler)
+    }
+    
+    init(registrar: FlutterPluginRegistrar) {
+        self.registrar = registrar
     }
     
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -45,6 +38,16 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin {
                 updateSensorInterval(sensorId: sensorId!, interval: interval!)
             }
             result(nil)
+            break
+        case "start_event_channel":
+            let dataMap = call.arguments as! NSDictionary
+            let sensorId = dataMap["sensorId"] as? Int
+            let interval = dataMap["interval"] as? Int
+            if sensorId != nil && interval != nil {
+                updateSensorInterval(sensorId: sensorId!, interval: interval!)
+                result(startEventChannel(sensorId: sensorId!, interval: interval!))
+            }
+            result(false)
             break
         default:
             result(FlutterMethodNotImplemented)
@@ -105,5 +108,39 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin {
         default:
             break
         }
+    }
+    
+    private func startEventChannel(sensorId: Int, interval: Int)->Bool{
+        var started = true
+        switch sensorId {
+        case AccelerometerStreamHandler.SENSOR_ID:
+            let accelerometerEventChannel = FlutterEventChannel(name:"flutter_sensors/\(AccelerometerStreamHandler.SENSOR_ID)", binaryMessenger: registrar.messenger())
+            accelerometerEventChannel.setStreamHandler(accelerometerStreamHandler)
+            break
+        case GyroscopeStreamHandler.SENSOR_ID:
+            let gyroscopeEventChannel = FlutterEventChannel(name:"flutter_sensors/\(GyroscopeStreamHandler.SENSOR_ID)", binaryMessenger: registrar.messenger())
+            gyroscopeEventChannel.setStreamHandler(gyroscopeStreamHandler)
+            break
+        case MagneticFieldStreamHandler.SENSOR_ID:
+            let magneticFieldEventChannel = FlutterEventChannel(name:"flutter_sensors/\(MagneticFieldStreamHandler.SENSOR_ID)", binaryMessenger: registrar.messenger())
+            magneticFieldEventChannel.setStreamHandler(magneticFieldStreamHandler)
+            break
+        case LinearAccelerationStreamHandler.SENSOR_ID:
+            let linearAccelerationEventChannel = FlutterEventChannel(name:"flutter_sensors/\(LinearAccelerationStreamHandler.SENSOR_ID)", binaryMessenger: registrar.messenger())
+            linearAccelerationEventChannel.setStreamHandler(linearAccelerationStreamHandler)
+            break
+        case StepDetectorStreamHandler.SENSOR_ID:
+            let stepDetectorEventChannel = FlutterEventChannel(name:"flutter_sensors/\(StepDetectorStreamHandler.SENSOR_ID)", binaryMessenger: registrar.messenger())
+            stepDetectorEventChannel.setStreamHandler(stepDetectorStreamHandler)
+            break
+        case HeadingStreamHandler.SENSOR_ID:
+            let headingEventChannel = FlutterEventChannel(name:"flutter_sensors/\(HeadingStreamHandler.SENSOR_ID)", binaryMessenger: registrar.messenger())
+            headingEventChannel.setStreamHandler(headingStreamHandler)
+            break
+        default:
+            started = false
+            break
+        }
+        return started
     }
 }
