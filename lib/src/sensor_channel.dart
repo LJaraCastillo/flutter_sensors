@@ -5,7 +5,7 @@ typedef SensorCallback(int sensor, List<double> data, int accuracy);
 class _SensorChannel {
   /// Method channel of the plugin.
   static const MethodChannel _methodChannel =
-      const MethodChannel('flutter_sensors/utils');
+      const MethodChannel('flutter_sensors');
 
   /// List of subscriptions to the update event channel.
   final Map<int, EventChannel> _eventChannels = {};
@@ -14,17 +14,19 @@ class _SensorChannel {
   final Map<int, Stream<SensorEvent>> _sensorStreams = {};
 
   /// Register a sensor update request.
-  Stream<SensorEvent> sensorUpdates({int sensorId, Duration interval}){
+  Future<Stream<SensorEvent>> sensorUpdates(
+      {int sensorId, Duration interval}) async {
     Stream<SensorEvent> sensorStream = _getSensorStream(sensorId);
+    interval =  interval ?? Sensors.SENSOR_DELAY_NORMAL;
     if (sensorStream == null) {
-      final args = {"interval":_transformDelayDurationToInt(interval)};
-      sensorStream =
-          _getEventChannel(sensorId).receiveBroadcastStream(args).map((event) {
+      final args = {"interval": _transformDelayDurationToInt(interval)};
+      final eventChannel = await _getEventChannel(sensorId, arguments: args);
+      sensorStream = eventChannel.receiveBroadcastStream().map((event) {
         return SensorEvent.fromMap(event);
       });
       _sensorStreams.putIfAbsent(sensorId, () => sensorStream);
-    }else{
-      updateSensorInterval(sensorId: sensorId, interval: interval);
+    } else {
+      await updateSensorInterval(sensorId: sensorId, interval: interval);
     }
     return sensorStream;
   }
@@ -42,7 +44,10 @@ class _SensorChannel {
   Future updateSensorInterval({int sensorId, Duration interval}) async {
     return _methodChannel.invokeMethod(
       'update_sensor_interval',
-      {"sensorId": sensorId, "interval": _transformDelayDurationToInt(interval)},
+      {
+        "sensorId": sensorId,
+        "interval": _transformDelayDurationToInt(interval)
+      },
     );
   }
 
@@ -52,9 +57,11 @@ class _SensorChannel {
   }
 
   /// Return the stream associated with the given sensor.
-  EventChannel _getEventChannel(int sensorId) {
+  Future<EventChannel> _getEventChannel(int sensorId, {Map arguments}) async {
     EventChannel eventChannel = _eventChannels[sensorId];
     if (eventChannel == null) {
+      arguments["sensorId"] = sensorId;
+      await _methodChannel.invokeMethod("start_event_channel", arguments);
       eventChannel = EventChannel("flutter_sensors/$sensorId");
       _eventChannels.putIfAbsent(sensorId, () => eventChannel);
     }

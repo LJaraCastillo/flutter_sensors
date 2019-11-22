@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
 import 'dart:async';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_sensors/flutter_sensors.dart';
 
 void main() => runApp(MyApp());
@@ -17,6 +17,7 @@ class _MyAppState extends State<MyApp> {
   List<double> _gyroData = List.filled(3, 0.0);
   StreamSubscription _accelSubscription;
   StreamSubscription _gyroSubscription;
+
   @override
   void initState() {
     _checkAccelerometerStatus();
@@ -44,11 +45,11 @@ class _MyAppState extends State<MyApp> {
   Future<void> _startAccelerometer() async {
     if (_accelSubscription != null) return;
     if (_accelAvailable) {
-      _accelSubscription = SensorManager()
-          .sensorUpdates(
-              sensorId: Sensors.ACCELEROMETER,
-              interval: Sensors.SENSOR_DELAY_GAME)
-          .listen((sensorEvent) {
+      final stream = await SensorManager().sensorUpdates(
+        sensorId: Sensors.ACCELEROMETER,
+        interval: Sensors.SENSOR_DELAY_GAME,
+      );
+      _accelSubscription = stream.listen((sensorEvent) {
         setState(() {
           _accelData = sensorEvent.data;
         });
@@ -73,9 +74,9 @@ class _MyAppState extends State<MyApp> {
   Future<void> _startGyroscope() async {
     if (_gyroSubscription != null) return;
     if (_gyroAvailable) {
-      _gyroSubscription =
-          SensorManager().sensorUpdates(sensorId: Sensors.GYROSCOPE)
-              .listen((sensorEvent) {
+      final stream =
+          await SensorManager().sensorUpdates(sensorId: Sensors.GYROSCOPE);
+      _gyroSubscription = stream.listen((sensorEvent) {
         setState(() {
           _gyroData = sensorEvent.data;
         });
