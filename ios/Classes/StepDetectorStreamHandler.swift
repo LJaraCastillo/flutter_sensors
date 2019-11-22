@@ -15,7 +15,7 @@ public class StepDetectorStreamHandler : NSObject, FlutterStreamHandler {
     
     public func onListen(withArguments arguments: Any?, eventSink: @escaping FlutterEventSink) -> FlutterError? {
         if isAvailable() {
-            startUpdates(arguments: arguments, eventSink: eventSink)
+            startUpdates(eventSink: eventSink)
         }
         return nil
     }
@@ -31,7 +31,7 @@ public class StepDetectorStreamHandler : NSObject, FlutterStreamHandler {
         }
     }
     
-    private func startUpdates(arguments: Any?, eventSink:@escaping FlutterEventSink){
+    private func startUpdates(eventSink:@escaping FlutterEventSink){
         initPedometer()
         pedometer?.startUpdates(from: Date(), withHandler: {data, error in
             guard error == nil else { return }

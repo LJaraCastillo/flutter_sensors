@@ -15,7 +15,7 @@ public class GyroscopeStreamHandler : NSObject, FlutterStreamHandler {
     
     public func onListen(withArguments arguments: Any?, eventSink: @escaping FlutterEventSink) -> FlutterError? {
         if isAvailable() {
-            self.startUpdates(arguments: arguments, eventSink: eventSink)
+            self.startUpdates(eventSink: eventSink)
         }
         return nil
     }
@@ -31,17 +31,8 @@ public class GyroscopeStreamHandler : NSObject, FlutterStreamHandler {
         }
     }
     
-    private func configMotionManager(arguments: Any?) {
-        if arguments != nil{
-            let args = arguments as? [String: Any] ?? Dictionary<String, Any>()
-            let interval = args["interval"] as? Int ?? 0
-            setInterval(interval: interval)
-        }
-    }
-    
-    private func startUpdates(arguments: Any?, eventSink: @escaping FlutterEventSink){
+    private func startUpdates(eventSink: @escaping FlutterEventSink){
         initMotionManager()
-        configMotionManager(arguments: arguments)
         self.motionManager?.startGyroUpdates(to: OperationQueue.current!, withHandler: { (data, error) in
             guard error == nil else { return }
             guard let gyroscopeData = data else { return }
