@@ -9,6 +9,7 @@
 .buildlog/
 .history
 .svn/
+/android/libs/flutter.jar
 
 # IntelliJ related
 *.iml
