@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.1
+
+* Updated description.
+* Formatted code.
+
 ## 0.1.0
 
 * Sensor stream to retrieve data.
