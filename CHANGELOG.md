@@ -1,7 +1,7 @@
 # Changelog
 
-## 0.0.1
+## 0.1.0
 
-* Function to register a listener to sensor changes.
-* Function to un-register a previously registered listener.
-* Added callback that inform changes in a sensor with the accuracy of the reading.
+* Sensor stream to retrieve data.
+* Dynamic sensor registering in Android.
+* iOS register some specific sensors. (Check Sensors.dart class)
