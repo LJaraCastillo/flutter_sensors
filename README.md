@@ -10,7 +10,7 @@ Copy the following line below dependencies in your **pubspec.yaml** file.
 ```yaml
 dependencies:
      ...
-    flutter_sensors: ^0.1.0
+    flutter_sensors: ^0.1.2
 ```
 
 Then you need to import the dependency.
@@ -76,4 +76,4 @@ _lightSubscription = stream.listen((sensorEvent) {
 _lightSubscription.cancel();
 ```
 
-You can get the rest of the IDs from [here](https://developer.android.com/reference/android/hardware/Sensor#TYPE_LIGHT).
+You can get the rest of the IDs from [here](https://developer.android.com/reference/android/hardware/Sensor).
