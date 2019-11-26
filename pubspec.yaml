@@ -1,11 +1,11 @@
 name: flutter_sensors
-description: Simple sensor event listener plugin for flutter.
-version: 0.1.0
+description: A flutter plugin to access the available sensors of the device.
+version: 0.1.1
 author: Luis Andrés Jara Castillo <luisandres.jaracastillo@gmail.com>
 homepage: https://github.com/LJaraCastillo/flutter_sensors
 
 environment:
-  sdk: ">=2.0.0-dev.68.0 <3.0.0"
+  sdk: ">=2.1.0 <3.0.0"
 
 dependencies:
   flutter:
