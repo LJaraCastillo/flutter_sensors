@@ -19,7 +19,7 @@ class _SensorChannel {
     Stream<SensorEvent> sensorStream = _getSensorStream(sensorId);
     interval =  interval ?? Sensors.SENSOR_DELAY_NORMAL;
     if (sensorStream == null) {
-      final args = {"interval": _transformDelayDurationToInt(interval)};
+      final args = {"interval": _transformDurationToNumber(interval)};
       final eventChannel = await _getEventChannel(sensorId, arguments: args);
       sensorStream = eventChannel.receiveBroadcastStream().map((event) {
         return SensorEvent.fromMap(event);
@@ -46,7 +46,7 @@ class _SensorChannel {
       'update_sensor_interval',
       {
         "sensorId": sensorId,
-        "interval": _transformDelayDurationToInt(interval)
+        "interval": _transformDurationToNumber(interval)
       },
     );
   }
@@ -69,7 +69,7 @@ class _SensorChannel {
   }
 
   /// Transform the delay duration object to an int value for each platform.
-  int _transformDelayDurationToInt(Duration delay) {
+  num _transformDurationToNumber(Duration delay) {
     return Platform.isAndroid
         ? delay.inMicroseconds
         : delay.inMicroseconds / 1000000;

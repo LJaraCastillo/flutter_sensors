@@ -14,7 +14,7 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin {
 
     public static func register(with registrar: FlutterPluginRegistrar) {
         let instance = SwiftFlutterSensorsPlugin(registrar: registrar)
-        let channel = FlutterMethodChannel(name: "flutter_sensors/utils", binaryMessenger: registrar.messenger())
+        let channel = FlutterMethodChannel(name: "flutter_sensors", binaryMessenger: registrar.messenger())
         registrar.addMethodCallDelegate(instance, channel: channel)
     }
     
@@ -33,7 +33,7 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin {
         case "update_sensor_interval":
             let dataMap = call.arguments as! NSDictionary
             let sensorId = dataMap["sensorId"] as? Int
-            let interval = dataMap["interval"] as? Int
+            let interval = dataMap["interval"] as? Double
             if sensorId != nil && interval != nil {
                 updateSensorInterval(sensorId: sensorId!, interval: interval!)
             }
@@ -42,7 +42,7 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin {
         case "start_event_channel":
             let dataMap = call.arguments as! NSDictionary
             let sensorId = dataMap["sensorId"] as? Int
-            let interval = dataMap["interval"] as? Int
+            let interval = dataMap["interval"] as? Double
             if sensorId != nil && interval != nil {
                 updateSensorInterval(sensorId: sensorId!, interval: interval!)
                 result(startEventChannel(sensorId: sensorId!, interval: interval!))
@@ -91,7 +91,7 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin {
         return isAvailable
     }
     
-    private func updateSensorInterval(sensorId: Int, interval: Int){
+    private func updateSensorInterval(sensorId: Int, interval: Double){
         switch sensorId {
         case AccelerometerStreamHandler.SENSOR_ID:
             accelerometerStreamHandler.setInterval(interval: interval)
@@ -110,7 +110,7 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin {
         }
     }
     
-    private func startEventChannel(sensorId: Int, interval: Int)->Bool{
+    private func startEventChannel(sensorId: Int, interval: Double)->Bool{
         var started = true
         switch sensorId {
         case AccelerometerStreamHandler.SENSOR_ID:

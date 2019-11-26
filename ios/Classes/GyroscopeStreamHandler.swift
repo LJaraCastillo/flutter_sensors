@@ -12,7 +12,8 @@ import CoreMotion
 public class GyroscopeStreamHandler : NSObject, FlutterStreamHandler {
     public static let SENSOR_ID = 4
     private var motionManager: CMMotionManager?
-    
+    private var interval: Double = 0
+
     public func onListen(withArguments arguments: Any?, eventSink: @escaping FlutterEventSink) -> FlutterError? {
         if isAvailable() {
             self.startUpdates(eventSink: eventSink)
@@ -33,6 +34,7 @@ public class GyroscopeStreamHandler : NSObject, FlutterStreamHandler {
     
     private func startUpdates(eventSink: @escaping FlutterEventSink){
         initMotionManager()
+        updateInterval()
         self.motionManager?.startGyroUpdates(to: OperationQueue.current!, withHandler: { (data, error) in
             guard error == nil else { return }
             guard let gyroscopeData = data else { return }
@@ -51,7 +53,12 @@ public class GyroscopeStreamHandler : NSObject, FlutterStreamHandler {
         motionManager = nil
     }
     
-    public func setInterval(interval: Int) {
+    public func setInterval(interval: Double) {
+        self.interval = interval
+        self.updateInterval()
+    }
+    
+    private func updateInterval(){
         motionManager?.gyroUpdateInterval = TimeInterval(interval)
     }
     

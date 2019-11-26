@@ -12,6 +12,7 @@ import CoreMotion
 public class AccelerometerStreamHandler : NSObject, FlutterStreamHandler {
     public static let SENSOR_ID = 1
     private var motionManager: CMMotionManager?
+    private var interval: Double = 0
     
     public func onListen(withArguments arguments: Any?, eventSink: @escaping FlutterEventSink) -> FlutterError? {
         if isAvailable() {
@@ -33,6 +34,7 @@ public class AccelerometerStreamHandler : NSObject, FlutterStreamHandler {
     
     private func startUpdates(eventSink:@escaping FlutterEventSink){
         initMotionManager()
+        updateInterval()
         self.motionManager?.startAccelerometerUpdates(to: OperationQueue.current!, withHandler: { (data, error) in
             guard error == nil else { return }
             guard let accelerometerData = data else { return }
@@ -51,7 +53,12 @@ public class AccelerometerStreamHandler : NSObject, FlutterStreamHandler {
         motionManager = nil
     }
     
-    public func setInterval(interval: Int) {
+    public func setInterval(interval: Double) {
+        self.interval = interval
+        self.updateInterval()
+    }
+    
+    private func updateInterval(){
         motionManager?.accelerometerUpdateInterval = TimeInterval(interval)
     }
     

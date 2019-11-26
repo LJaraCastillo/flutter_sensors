@@ -70,7 +70,7 @@ class SensorStreamHandler(private val sensorManager: SensorManager, sensorId: In
 
     private fun notifyEvent(sensorId: Int, data: ArrayList<Float>, accuracy: Int) {
         val resultMap = mutableMapOf<String, Any?>(
-                "sensor" to sensorId,
+                "sensorId" to sensorId,
                 "data" to data,
                 "accuracy" to accuracy)
         eventSink?.success(resultMap)
