@@ -17,7 +17,7 @@ class _SensorChannel {
   Future<Stream<SensorEvent>> sensorUpdates(
       {int sensorId, Duration interval}) async {
     Stream<SensorEvent> sensorStream = _getSensorStream(sensorId);
-    interval =  interval ?? Sensors.SENSOR_DELAY_NORMAL;
+    interval = interval ?? Sensors.SENSOR_DELAY_NORMAL;
     if (sensorStream == null) {
       final args = {"interval": _transformDurationToNumber(interval)};
       final eventChannel = await _getEventChannel(sensorId, arguments: args);
@@ -44,10 +44,7 @@ class _SensorChannel {
   Future updateSensorInterval({int sensorId, Duration interval}) async {
     return _methodChannel.invokeMethod(
       'update_sensor_interval',
-      {
-        "sensorId": sensorId,
-        "interval": _transformDurationToNumber(interval)
-      },
+      {"sensorId": sensorId, "interval": _transformDurationToNumber(interval)},
     );
   }
 
