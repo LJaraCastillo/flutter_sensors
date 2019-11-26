@@ -1,6 +1,6 @@
 name: flutter_sensors
 description: A flutter plugin to access the available sensors of the device.
-version: 0.1.1
+version: 0.1.2
 author: Luis Andrés Jara Castillo <luisandres.jaracastillo@gmail.com>
 homepage: https://github.com/LJaraCastillo/flutter_sensors
 
