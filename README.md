@@ -10,7 +10,7 @@ Copy the following line below dependencies in your **pubspec.yaml** file.
 ```yaml
 dependencies:
      ...
-    flutter_sensors: ^0.1.2
+    flutter_sensors: ^0.1.5
 ```
 
 Then you need to import the dependency.
