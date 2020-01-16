@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.5
+
+* Fixed compilation error (#2). Added support for new embedding 
+mechanism.
+
 ## 0.1.2
 
 * Updated Android dependencies
