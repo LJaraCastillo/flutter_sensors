@@ -47,7 +47,7 @@ class _MyAppState extends State<MyApp> {
     if (_accelAvailable) {
       final stream = await SensorManager().sensorUpdates(
         sensorId: Sensors.ACCELEROMETER,
-        interval: Sensors.SENSOR_DELAY_GAME,
+        interval: Sensors.SENSOR_DELAY_FASTEST,
       );
       _accelSubscription = stream.listen((sensorEvent) {
         setState(() {
