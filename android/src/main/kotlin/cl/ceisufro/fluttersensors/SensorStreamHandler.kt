@@ -57,8 +57,7 @@ class SensorStreamHandler(private val sensorManager: SensorManager, sensorId: In
 
     override fun onSensorChanged(event: SensorEvent?) {
         val currentTime = Calendar.getInstance()
-        val diff = (currentTime.timeInMillis - lastUpdate.timeInMillis) * 1000
-        if (event != null && (customDelay && diff > interval!!)) {
+        if (event != null && isValidTime(currentTime)) {
             val data = arrayListOf<Float>()
             event.values.forEach {
                 data.add(it)
@@ -66,6 +65,14 @@ class SensorStreamHandler(private val sensorManager: SensorManager, sensorId: In
             notifyEvent(event.sensor.type, data, event.accuracy)
             lastUpdate = currentTime
         }
+    }
+
+    private fun isValidTime(time: Calendar): Boolean {
+        if (customDelay) {
+            val diff = (time.timeInMillis - lastUpdate.timeInMillis) * 1000
+            return diff > interval!!
+        }
+        return true
     }
 
     private fun notifyEvent(sensorId: Int, data: ArrayList<Float>, accuracy: Int) {
