@@ -11,12 +11,12 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  bool _accelAvailable = false;
-  bool _gyroAvailable = false;
-  List<double> _accelData = List.filled(3, 0.0);
-  List<double> _gyroData = List.filled(3, 0.0);
-  StreamSubscription _accelSubscription;
-  StreamSubscription _gyroSubscription;
+  bool? _accelAvailable = false;
+  bool? _gyroAvailable = false;
+  List<double>? _accelData = List.filled(3, 0.0);
+  List<double>? _gyroData = List.filled(3, 0.0);
+  StreamSubscription? _accelSubscription;
+  StreamSubscription? _gyroSubscription;
 
   @override
   void initState() {
@@ -44,7 +44,7 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> _startAccelerometer() async {
     if (_accelSubscription != null) return;
-    if (_accelAvailable) {
+    if (_accelAvailable!) {
       final stream = await SensorManager().sensorUpdates(
         sensorId: Sensors.ACCELEROMETER,
         interval: Sensors.SENSOR_DELAY_FASTEST,
@@ -59,7 +59,7 @@ class _MyAppState extends State<MyApp> {
 
   void _stopAccelerometer() {
     if (_accelSubscription == null) return;
-    _accelSubscription.cancel();
+    _accelSubscription!.cancel();
     _accelSubscription = null;
   }
 
@@ -73,7 +73,7 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> _startGyroscope() async {
     if (_gyroSubscription != null) return;
-    if (_gyroAvailable) {
+    if (_gyroAvailable!) {
       final stream =
           await SensorManager().sensorUpdates(sensorId: Sensors.GYROSCOPE);
       _gyroSubscription = stream.listen((sensorEvent) {
@@ -86,7 +86,7 @@ class _MyAppState extends State<MyApp> {
 
   void _stopGyroscope() {
     if (_gyroSubscription == null) return;
-    _gyroSubscription.cancel();
+    _gyroSubscription!.cancel();
     _gyroSubscription = null;
   }
 
@@ -112,17 +112,17 @@ class _MyAppState extends State<MyApp> {
               ),
               Padding(padding: EdgeInsets.only(top: 16.0)),
               Text(
-                "[0](X) = ${_accelData[0]}",
+                "[0](X) = ${_accelData![0]}",
                 textAlign: TextAlign.center,
               ),
               Padding(padding: EdgeInsets.only(top: 16.0)),
               Text(
-                "[1](Y) = ${_accelData[1]}",
+                "[1](Y) = ${_accelData![1]}",
                 textAlign: TextAlign.center,
               ),
               Padding(padding: EdgeInsets.only(top: 16.0)),
               Text(
-                "[2](Z) = ${_accelData[2]}",
+                "[2](Z) = ${_accelData![2]}",
                 textAlign: TextAlign.center,
               ),
               Padding(padding: EdgeInsets.only(top: 16.0)),
@@ -159,17 +159,17 @@ class _MyAppState extends State<MyApp> {
               ),
               Padding(padding: EdgeInsets.only(top: 16.0)),
               Text(
-                "[0](X) = ${_gyroData[0]}",
+                "[0](X) = ${_gyroData![0]}",
                 textAlign: TextAlign.center,
               ),
               Padding(padding: EdgeInsets.only(top: 16.0)),
               Text(
-                "[1](Y) = ${_gyroData[1]}",
+                "[1](Y) = ${_gyroData![1]}",
                 textAlign: TextAlign.center,
               ),
               Padding(padding: EdgeInsets.only(top: 16.0)),
               Text(
-                "[2](Z) = ${_gyroData[2]}",
+                "[2](Z) = ${_gyroData![2]}",
                 textAlign: TextAlign.center,
               ),
               Padding(padding: EdgeInsets.only(top: 16.0)),

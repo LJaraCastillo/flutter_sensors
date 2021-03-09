@@ -3,13 +3,13 @@ part of flutter_sensors;
 /// Class that represents an sensor update event.
 class SensorEvent {
   /// Id of the sensor updating.
-  int sensorId;
+  int? sensorId;
 
   /// List of data.
-  List<double> data;
+  List<double>? data;
 
   /// Accuracy of the reading.
-  int accuracy;
+  int? accuracy;
 
   /// Constructor.
   SensorEvent(this.sensorId, this.data, this.accuracy);
