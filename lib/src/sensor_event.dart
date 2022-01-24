@@ -12,17 +12,23 @@ class SensorEvent {
   int accuracy;
 
   /// Constructor.
-  SensorEvent(this.sensorId, this.data, this.accuracy);
+  SensorEvent._({
+    required this.sensorId,
+    required this.data,
+    required this.accuracy,
+  });
 
   /// Construct an object from a map.
-  SensorEvent.fromMap(Map map) {
-    this.sensorId = map["sensorId"];
-    this.accuracy = map["accuracy"];
-    List<double> data = [];
-    List<dynamic> resultData = map["data"];
+  factory SensorEvent.fromMap(Map map) {
+    final data = <double>[];
+    final resultData = map["data"] as List<dynamic>;
     resultData.forEach((value) {
       data.add(value);
     });
-    this.data = data;
+    return SensorEvent._(
+      sensorId: map["sensorId"],
+      accuracy: map["accuracy"],
+      data: data,
+    );
   }
 }

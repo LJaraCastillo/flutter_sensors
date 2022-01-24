@@ -10,7 +10,9 @@
 .history
 .svn/
 /android/libs/flutter.jar
-
+.dart_tool/
+.flutter-plugins-dependencies
+flutter_export_environment.sh
 # IntelliJ related
 *.iml
 *.ipr

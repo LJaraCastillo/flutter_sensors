@@ -31,7 +31,7 @@ class SensorManager {
   /// the sensor event channels are dynamically created and must be
   /// registered before returning the stream for each channel.
   Future<Stream<SensorEvent>> sensorUpdates(
-          {int sensorId, Duration interval}) =>
+          {required int sensorId, Duration? interval}) =>
       _sensorChannel.sensorUpdates(sensorId: sensorId, interval: interval);
 
   /// Checks if the [sensorId] is available in the system or supported by the
@@ -40,7 +40,7 @@ class SensorManager {
       _sensorChannel.isSensorAvailable(sensorId);
 
   /// Updates the interval between updates for an specific sensor.
-  Future updateSensorInterval({int sensorId, Duration interval}) =>
+  Future updateSensorInterval({required int sensorId, Duration? interval}) =>
       _sensorChannel.updateSensorInterval(
           sensorId: sensorId, interval: interval);
 }

@@ -14,9 +14,9 @@ class FlutterSensorsPlugin() : FlutterPlugin, MethodCallHandler {
     private lateinit var messenger: BinaryMessenger
     private lateinit var sensorManager: SensorManager
 
-    constructor(registrar: PluginRegistry.Registrar) : this() {
-        this.context = registrar.context()
-        this.messenger = registrar.messenger()
+    constructor(context: Context, binaryMessenger: BinaryMessenger) : this() {
+        this.context = context
+        this.messenger = binaryMessenger
         this.sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
     }
 
@@ -31,10 +31,13 @@ class FlutterSensorsPlugin() : FlutterPlugin, MethodCallHandler {
     companion object {
         private const val CHANNEL_NAME = "flutter_sensors"
 
+        @Suppress("deprecation")
         @JvmStatic
         fun registerWith(registrar: PluginRegistry.Registrar) {
             val methodChannel = MethodChannel(registrar.messenger(), CHANNEL_NAME)
-            val plugin = FlutterSensorsPlugin(registrar)
+            val context = registrar.context()
+            val binaryMessenger = registrar.messenger()
+            val plugin = FlutterSensorsPlugin(context, binaryMessenger)
             methodChannel.setMethodCallHandler(plugin)
             registrar.addViewDestroyListener {
                 plugin.onDestroy()
@@ -97,7 +100,8 @@ class FlutterSensorsPlugin() : FlutterPlugin, MethodCallHandler {
             val interval: Int? = dataMap["interval"] as Int?
             if (!eventChannels.containsKey(sensorId)) {
                 val eventChannel = EventChannel(messenger, "flutter_sensors/$sensorId")
-                val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+                val sensorManager =
+                    context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
                 val sensorStreamHandler = SensorStreamHandler(sensorManager, sensorId, interval)
                 eventChannel.setStreamHandler(sensorStreamHandler)
                 eventChannels[sensorId] = eventChannel

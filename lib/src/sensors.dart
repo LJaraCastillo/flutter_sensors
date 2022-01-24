@@ -27,7 +27,7 @@ class Sensors {
   ///
   /// iOS documentation:
   ///
-  /// https://developer.apple.com/documentation/coremotion/cmacceleration
+  /// https://developer.apple.com/documentation/coremotion/getting_raw_gyroscope_events
   static const int GYROSCOPE = 4;
 
   /// Geomagnetic field sensor.

@@ -15,8 +15,8 @@ class _MyAppState extends State<MyApp> {
   bool _gyroAvailable = false;
   List<double> _accelData = List.filled(3, 0.0);
   List<double> _gyroData = List.filled(3, 0.0);
-  StreamSubscription _accelSubscription;
-  StreamSubscription _gyroSubscription;
+  StreamSubscription? _accelSubscription;
+  StreamSubscription? _gyroSubscription;
 
   @override
   void initState() {
@@ -59,7 +59,7 @@ class _MyAppState extends State<MyApp> {
 
   void _stopAccelerometer() {
     if (_accelSubscription == null) return;
-    _accelSubscription.cancel();
+    _accelSubscription?.cancel();
     _accelSubscription = null;
   }
 
@@ -86,7 +86,7 @@ class _MyAppState extends State<MyApp> {
 
   void _stopGyroscope() {
     if (_gyroSubscription == null) return;
-    _gyroSubscription.cancel();
+    _gyroSubscription?.cancel();
     _gyroSubscription = null;
   }
 
@@ -132,9 +132,8 @@ class _MyAppState extends State<MyApp> {
                   MaterialButton(
                     child: Text("Start"),
                     color: Colors.green,
-                    onPressed: _accelAvailable != null
-                        ? () => _startAccelerometer()
-                        : null,
+                    onPressed:
+                        _accelAvailable ? () => _startAccelerometer() : null,
                   ),
                   Padding(
                     padding: EdgeInsets.all(8.0),
@@ -142,9 +141,8 @@ class _MyAppState extends State<MyApp> {
                   MaterialButton(
                     child: Text("Stop"),
                     color: Colors.red,
-                    onPressed: _accelAvailable != null
-                        ? () => _stopAccelerometer()
-                        : null,
+                    onPressed:
+                        _accelAvailable ? () => _stopAccelerometer() : null,
                   ),
                 ],
               ),
@@ -179,8 +177,7 @@ class _MyAppState extends State<MyApp> {
                   MaterialButton(
                     child: Text("Start"),
                     color: Colors.green,
-                    onPressed:
-                        _gyroAvailable != null ? () => _startGyroscope() : null,
+                    onPressed: _gyroAvailable ? () => _startGyroscope() : null,
                   ),
                   Padding(
                     padding: EdgeInsets.all(8.0),
@@ -188,8 +185,7 @@ class _MyAppState extends State<MyApp> {
                   MaterialButton(
                     child: Text("Stop"),
                     color: Colors.red,
-                    onPressed:
-                        _gyroAvailable != null ? () => _stopGyroscope() : null,
+                    onPressed: _gyroAvailable ? () => _stopGyroscope() : null,
                   ),
                 ],
               ),
