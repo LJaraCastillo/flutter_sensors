@@ -10,7 +10,7 @@ Copy the following line below dependencies in your **pubspec.yaml** file.
 ```yaml
 dependencies:
      ...
-    flutter_sensors: ^0.1.5
+    flutter_sensors: ^1.0.1
 ```
 
 Then you need to import the dependency.
@@ -19,13 +19,21 @@ Then you need to import the dependency.
 import 'package:flutter_sensors/flutter_sensors.dart';
 ```
 
-### iOS only
+### iOS configuration
 
 You need to add the following key-value pair into your **Info.plist** file inside the **ios/Runner** folder in your project.
 
 ```plist
 <key>NSMotionUsageDescription</key>
 <string>A reason to get the permission</string>
+```
+
+### Android configuration
+
+You need to add the following permission in your **AndroidManifest.xml** to use the step counter.
+
+```xml
+<uses-permission android:name="android.permission.ACTIVITY_RECOGNITION"/>
 ```
 
 ## How to use

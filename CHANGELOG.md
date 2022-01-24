@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.1
+
+* Updated README.md
+
+## 1.0.0
+
+* Updated to support null safety.
+
 ## 0.1.6
 
 * Fixed delay problem that avoided events to be reported (#3).
