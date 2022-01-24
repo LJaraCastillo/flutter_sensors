@@ -13,6 +13,9 @@
 .dart_tool/
 .flutter-plugins-dependencies
 flutter_export_environment.sh
+Flutter.podspec
+IDEWorkspaceChecks.plist
+
 # IntelliJ related
 *.iml
 *.ipr
