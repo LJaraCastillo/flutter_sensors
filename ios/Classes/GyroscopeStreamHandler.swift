@@ -42,7 +42,8 @@ public class GyroscopeStreamHandler : NSObject, FlutterStreamHandler {
             let dataArray = [
                 values.x,
                 values.y,
-                values.z
+                values.z,
+                gyroscopeData.timestamp * 1000
             ]
             SwiftFlutterSensorsPlugin.notify(sensorId: GyroscopeStreamHandler.SENSOR_ID, sensorData: dataArray, eventSink: eventSink)
         })

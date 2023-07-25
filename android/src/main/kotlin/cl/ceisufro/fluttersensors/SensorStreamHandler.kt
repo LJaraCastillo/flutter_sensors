@@ -62,6 +62,7 @@ class SensorStreamHandler(private val sensorManager: SensorManager, sensorId: In
             event.values.forEach {
                 data.add(it)
             }
+            data.add(event.timestamp / 1000)
             notifyEvent(event.sensor.type, data, event.accuracy)
             lastUpdate = currentTime
         }
