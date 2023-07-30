@@ -45,7 +45,7 @@ public class MagneticFieldStreamHandler : NSObject, FlutterStreamHandler {
                 values.y,
                 values.z
             ]
-            SwiftFlutterSensorsPlugin.notify(sensorId: MagneticFieldStreamHandler.SENSOR_ID, sensorData: dataArray, timestamp: deviceMotion.timestamp * 1000, eventSink: eventSink)
+            SwiftFlutterSensorsPlugin.notify(sensorId: MagneticFieldStreamHandler.SENSOR_ID, sensorData: dataArray, timestamp: Int(deviceMotion.timestamp * 1000), eventSink: eventSink)
         })
     }
     
