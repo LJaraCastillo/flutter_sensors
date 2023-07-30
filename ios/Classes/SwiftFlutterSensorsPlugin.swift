@@ -54,10 +54,11 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin {
         }
     }
     
-    public static func notify(sensorId:Int, sensorData:[Double], eventSink:FlutterEventSink){
+    public static func notify(sensorId:Int, sensorData:[Double], timestamp: Int, eventSink:FlutterEventSink){
         let data = [
             "sensorId": sensorId,
             "data": sensorData,
+            "timestamp": timestamp,
             "accuracy": 3 //iOS does not send this value so we will match it to the value of high accuracy of Android which is 3
             ] as [String : Any]
         eventSink(data)

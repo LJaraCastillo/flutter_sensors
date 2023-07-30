@@ -42,10 +42,9 @@ public class AccelerometerStreamHandler : NSObject, FlutterStreamHandler {
             let dataArray = [
                 values.x,
                 values.y,
-                values.z,
-                accelerometerData.timestamp * 1000
+                values.z
             ]
-            SwiftFlutterSensorsPlugin.notify(sensorId: AccelerometerStreamHandler.SENSOR_ID, sensorData: dataArray, eventSink: eventSink)
+            SwiftFlutterSensorsPlugin.notify(sensorId: AccelerometerStreamHandler.SENSOR_ID, sensorData: dataArray, timestamp: accelerometerData.timestamp * 1000, eventSink: eventSink)
         })
     }
     
