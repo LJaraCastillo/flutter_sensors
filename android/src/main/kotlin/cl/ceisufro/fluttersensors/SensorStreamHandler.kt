@@ -11,7 +11,7 @@ import java.util.*
 class SensorStreamHandler(private val sensorManager: SensorManager, sensorId: Int, private var interval: Int?) : EventChannel.StreamHandler, SensorEventListener {
     private val sensor: Sensor? = sensorManager.getDefaultSensor(sensorId)
     private var eventSink: EventChannel.EventSink? = null
-    private var lastUpdate: Calendar = Calendar.getInstance()
+    private var lastUpdate: Long = 0
     private var customDelay: Boolean = false
 
     init {
@@ -56,30 +56,30 @@ class SensorStreamHandler(private val sensorManager: SensorManager, sensorId: In
     }
 
     override fun onSensorChanged(event: SensorEvent?) {
-        val currentTime = Calendar.getInstance()
-        if (event != null && isValidTime(currentTime)) {
+        if (event != null && isValidTime(event.timestamp / 1000)) {
             val data = arrayListOf<Float>()
             event.values.forEach {
                 data.add(it)
             }
-            notifyEvent(event.sensor.type, data, event.accuracy)
-            lastUpdate = currentTime
+            notifyEvent(event.sensor.type, data, event.accuracy, (event.timestamp / 1000000).toInt())
+            lastUpdate = event.timestamp / 1000
         }
     }
 
-    private fun isValidTime(time: Calendar): Boolean {
+    private fun isValidTime(time: Long): Boolean {
         if (customDelay) {
-            val diff = (time.timeInMillis - lastUpdate.timeInMillis) * 1000
-            return diff > interval!!
+            val diff = time - lastUpdate
+            return diff > (interval!! - 1000)
         }
         return true
     }
 
-    private fun notifyEvent(sensorId: Int, data: ArrayList<Float>, accuracy: Int) {
+    private fun notifyEvent(sensorId: Int, data: ArrayList<Float>, accuracy: Int, timestamp: Int) {
         val resultMap = mutableMapOf<String, Any?>(
                 "sensorId" to sensorId,
                 "data" to data,
-                "accuracy" to accuracy)
+                "accuracy" to accuracy,
+                "timestamp" to timestamp)
         eventSink?.success(resultMap)
     }
 }

@@ -47,7 +47,7 @@ public class HeadingStreamHandler : NSObject, FlutterStreamHandler, CLLocationMa
     
     public func locationManager(_ manager: CLLocationManager, didUpdateHeading newHeading: CLHeading) {
         let data = [newHeading.magneticHeading]
-        SwiftFlutterSensorsPlugin.notify(sensorId: HeadingStreamHandler.SENSOR_ID, sensorData: data, eventSink: self.eventSink!)
+        SwiftFlutterSensorsPlugin.notify(sensorId: HeadingStreamHandler.SENSOR_ID, sensorData: data, timestamp: Int(newHeading.timestamp.timeIntervalSince1970 * 1000), eventSink: self.eventSink!)
     }
     
     public func locationManagerShouldDisplayHeadingCalibration(_ manager: CLLocationManager) -> Bool {

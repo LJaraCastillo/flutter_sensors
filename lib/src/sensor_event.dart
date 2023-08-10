@@ -11,11 +11,15 @@ class SensorEvent {
   /// Accuracy of the reading.
   int accuracy;
 
+  /// Timestamp of the reading
+  int timestamp;
+
   /// Constructor.
   SensorEvent._({
     required this.sensorId,
     required this.data,
     required this.accuracy,
+    required this.timestamp
   });
 
   /// Construct an object from a map.
@@ -28,6 +32,7 @@ class SensorEvent {
     return SensorEvent._(
       sensorId: map["sensorId"],
       accuracy: map["accuracy"],
+      timestamp: map["timestamp"],
       data: data,
     );
   }

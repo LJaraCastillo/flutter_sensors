@@ -36,7 +36,7 @@ public class StepDetectorStreamHandler : NSObject, FlutterStreamHandler {
         pedometer?.startUpdates(from: Date(), withHandler: {data, error in
             guard error == nil else { return }
             let steps = [1.0]
-            SwiftFlutterSensorsPlugin.notify(sensorId: StepDetectorStreamHandler.SENSOR_ID, sensorData: steps, eventSink: eventSink)
+            SwiftFlutterSensorsPlugin.notify(sensorId: StepDetectorStreamHandler.SENSOR_ID, sensorData: steps, timestamp: 1, eventSink: eventSink)
         })
     }
     
