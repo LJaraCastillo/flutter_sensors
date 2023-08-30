@@ -1,8 +1,8 @@
 name: flutter_sensors
 description: A flutter plugin to access the available sensors of the device.
 version: 1.0.1
-homepage: https://github.com/LJaraCastillo/native_video_view
-repository: https://github.com/LJaraCastillo/native_video_view
+homepage: https://github.com/LJaraCastillo/flutter_sensors
+repository: https://github.com/LJaraCastillo/flutter_sensors
 
 environment:
   sdk: ">=2.14.0 <3.0.0"
